@@ -26,7 +26,8 @@ from ogb.nodeproppred import PygNodePropPredDataset
 
 from torch_geometric.loader import DataLoader
 from torch_geometric.datasets import (GNNBenchmarkDataset, Planetoid, TUDataset,
-                                      WikipediaNetwork, ZINC)
+                                      WikipediaNetwork, ZINC, IMDB)
+from .imdb_loader import preformat_IMDB
 from torch_geometric.graphgym.config import cfg, set_cfg
 from torch_geometric.graphgym.model_builder import GraphGymModule
 from torch_geometric.graphgym.loader import load_pyg, load_ogb, set_dataset_attr
@@ -512,6 +513,9 @@ def load_dataset_master(format, name, dataset_dir):
         elif pyg_dataset_id == 'ZINC':
             dataset = preformat_ZINC(dataset_dir, name)
             
+        elif pyg_dataset_id == 'IMDB':
+            dataset = preformat_IMDB(dataset_dir, name)
+
         elif pyg_dataset_id == 'AQSOL':
             dataset = preformat_AQSOL(dataset_dir, name)
 

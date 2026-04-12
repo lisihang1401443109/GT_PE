@@ -6,3 +6,11 @@ results/
 .ipynb_checkpoints/
 .DS_Store
 wandb/
+weights/
+*.pt
+*.zip
+*.log
+nautilus/
+*.tar.gz
+*.error
+sanity_error.log
