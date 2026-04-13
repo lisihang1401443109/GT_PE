@@ -4,6 +4,7 @@ import time
 import warnings
 import os
 import zipfile
+import pickle
 from functools import partial
 from ..transform.expander_edges import generate_random_expander
 from yacs.config import CfgNode as CN
@@ -1350,6 +1351,33 @@ def preformat_ZINC(dataset_dir, name):
     """
     if name not in ['subset', 'full']:
         raise ValueError(f"Unexpected subset choice for ZINC dataset: {name}")
+    
+    # Offline fallback for ZINC subset: if local pickles exist but official
+    # subset index files are missing, create deterministic local indices to
+    # avoid triggering PyG's download() path (which clears raw_dir first).
+    if name == 'subset':
+        raw_dir = osp.join(dataset_dir, 'raw')
+        split_sizes = {'train': 10000, 'val': 1000, 'test': 1000}
+        have_pickles = all(
+            osp.isfile(osp.join(raw_dir, f'{s}.pickle'))
+            for s in split_sizes
+        )
+        if have_pickles:
+            for split, subset_size in split_sizes.items():
+                index_path = osp.join(raw_dir, f'{split}.index')
+                if osp.isfile(index_path):
+                    continue
+                with open(osp.join(raw_dir, f'{split}.pickle'), 'rb') as f:
+                    num_graphs = len(pickle.load(f))
+                upper = min(subset_size, num_graphs)
+                with open(index_path, 'w') as f:
+                    # Keep a trailing newline for compatibility with PyG parser.
+                    f.write(','.join(str(i) for i in range(upper)) + '\n')
+                logging.info(
+                    f"[*] Created offline ZINC subset index: {index_path} "
+                    f"({upper}/{num_graphs})"
+                )
+
     dataset = join_dataset_splits(
         [ZINC(root=dataset_dir, subset=(name == 'subset'), split=split)
          for split in ['train', 'val', 'test']]
