@@ -4,7 +4,7 @@ wandb:
   use: True
   project: "PEGT"
   name: "Pascal-VOC-GRITSparse-GPSE"
-  entity: jiaqing
+  entity: sihang-personal
 dataset:
   format: PyG-VOCSuperpixels
   name: edge_wt_region_boundary
@@ -21,7 +21,7 @@ dataset:
 posenc_GPSE:
   enable: true
   rand_type: NormalSE
-  model_dir: /home/lisihang/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt
+  model_dir: pretrained/gpse_model_molpcba_1.0.pt
   dim_pe: 32
   use_repr: true
   repr_type: no_post_mp

@@ -4,7 +4,7 @@ wandb:
   use: True
   project: "PEGT"
   name: "Pascal-VOC-GPS-RRWP"
-  entity: jiaqing
+  entity: sihang-personal
 dataset:
   pe_transform_on_the_fly: True
   format: PyG-VOCSuperpixels
@@ -22,7 +22,7 @@ dataset:
 posenc_RRWP:
   enable: True
   ksteps: 16
-  add_identity: True
+  add_identity: sihang-personal
   add_node_attr: False
   add_inverse: False
 train:
