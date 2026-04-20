@@ -24,6 +24,7 @@ posenc_GPSE:
   model_dir: pretrained/gpse_model_molpcba_1.0.pt
   dim_pe: 32
   loader:
+    type: neighbor
     batch_size: 1
 train:
   mode: custom
