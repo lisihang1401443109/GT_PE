@@ -196,13 +196,8 @@ class CustomLogger(Logger):
             'r2': reformat(r2_score(true, pred, multioutput='uniform_average')),
             'spearmanr': reformat(eval_spearmanr(true.numpy(),
                                                  pred.numpy())['spearmanr']),
-<<<<<<< HEAD
             'mse': reformat(mse),
             'rmse': reformat(np.sqrt(mse)),
-=======
-            'mse': reformat(mean_squared_error(true, pred)),
-            'rmse': reformat(torch.sqrt(torch.tensor(mean_squared_error(true, pred)))),
->>>>>>> b3aeb06 (benchmarking: add IMDB configs, fix logger RMSE bug, and standardize 400-epoch caps)
         }
 
     def update_stats(self, true, pred, loss, lr, time_used, params,
