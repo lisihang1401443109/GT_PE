@@ -6,6 +6,7 @@ echo "--- Dynamic Environment Setup Starting ---"
 # Initialize Conda
 echo "Initializing Conda..."
 source /opt/conda/etc/profile.d/conda.sh
+conda config --set solver libmamba || echo "libmamba solver not available, using default."
 
 ENV_PATH="$HOME/venv"
 echo "Creating dynamic environment at $ENV_PATH..."
