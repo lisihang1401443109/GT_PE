@@ -16,16 +16,20 @@ conda create -p "$ENV_PATH" python=3.9 -y
 conda activate "$ENV_PATH"
 
 echo "Installing PyTorch 2.3.0..."
-# Install torch via pip to stay consistent with extensions
-pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
+# Install torch via pip with no-cache to ensure clean matching wheels
+pip install --no-cache-dir torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
+
+# Verify torch version immediately
+python -c "import torch; print(f'Detected Torch version: {torch.__version__}'); assert torch.__version__.startswith('2.3.0'), 'Torch version mismatch!'"
 
 echo "Installing PyG and related libraries..."
-pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
-pip install torch-geometric
+pip install --no-cache-dir torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
+pip install --no-cache-dir torch-geometric
 
 echo "Installing additional dependencies..."
 conda install openbabel fsspec rdkit -c conda-forge -y
-pip install yacs torchmetrics performer-pytorch ogb tensorboardX wandb torch_ppr attrdict opt_einsum graphgym loguru pytorch_lightning==2.2.0
+# Pin torch==2.3.0 again here to prevent accidental upgrade by other packages
+pip install --no-cache-dir yacs torchmetrics performer-pytorch ogb tensorboardX wandb torch_ppr attrdict opt_einsum graphgym loguru pytorch_lightning==2.2.0 torch==2.3.0
 pip install setuptools==59.5.0
 
 echo "Cleaning up conda cache..."
