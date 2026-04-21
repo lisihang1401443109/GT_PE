@@ -1,0 +1,37 @@
+out_dir: results
+metric_best: f1
+metric_agg: argmax
+accelerator: "cuda:0"
+num_workers: 4
+wandb:
+  use: True
+  project: PEGT
+  name: "IMDB-GRITSparse-RRWP"
+  entity: sihang-personal
+dataset:
+  format: PyG-IMDB
+  name: MULTI
+  task: graph
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: TypeDictNode+RRWP
+  node_encoder_num_types: 1
+  node_encoder_bn: False
+  edge_encoder: False
+posenc_RRWP:
+  enable: True
+  model_dir: pretrained/gpse_model_molpcba_1.0.pt
+  dim_pe: 32
+train:
+  mode: custom
+  batch_size: 32
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: GritTransformer
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: mean
+graph_gym:
+  max_epoch: 400

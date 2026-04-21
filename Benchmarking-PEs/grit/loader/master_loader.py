@@ -33,6 +33,8 @@ from torch_geometric.graphgym.config import cfg, set_cfg
 from torch_geometric.graphgym.model_builder import GraphGymModule
 from torch_geometric.graphgym.loader import load_pyg, load_ogb, set_dataset_attr
 from torch_geometric.graphgym.register import register_loader
+import torch_geometric.graphgym.models.head  # noqa
+import torch_geometric.graphgym.models.gnn  # noqa
 
 from grit.transform.transforms import (VirtualNodePatchSingleton,
                                            clip_graphs_to_size,
