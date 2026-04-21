@@ -23,7 +23,7 @@ pip install --no-cache-dir torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --
 python -c "import torch; print(f'Detected Torch version: {torch.__version__}'); assert torch.__version__.startswith('2.3.0'), 'Torch version mismatch!'"
 
 echo "Installing PyG and related libraries..."
-pip install --no-cache-dir torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
+pip install --no-cache-dir pyg_lib torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
 pip install --no-cache-dir torch-geometric
 
 echo "Installing additional dependencies..."
