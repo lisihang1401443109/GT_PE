@@ -7,7 +7,7 @@ echo "--- Dynamic Environment Setup Starting ---"
 echo "Initializing Conda..."
 source /opt/conda/etc/profile.d/conda.sh
 
-ENV_PATH="/workspace/venv"
+ENV_PATH="$HOME/venv"
 echo "Creating dynamic environment at $ENV_PATH..."
 
 # Create environment with Python 3.9
