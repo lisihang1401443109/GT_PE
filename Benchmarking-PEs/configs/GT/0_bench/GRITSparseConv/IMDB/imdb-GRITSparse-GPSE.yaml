@@ -26,6 +26,20 @@ posenc_GPSE:
   loader:
     type: neighbor
     batch_size: 1
+  gnn_cfg:
+    head: inductive_hybrid_multi
+    layers_pre_mp: 1
+    layers_mp: 20
+    layers_post_mp: 2
+    dim_inner: 512
+    layer_type: resgatedgcnconv
+    multi_head_dim_inner: 32 # use dim_inner if None
+    stage_type: skipsum
+    batchnorm: true
+    act: relu
+    dropout: 0.2
+    agg: mean
+    normalize_adj: false
 train:
   mode: custom
   batch_size: 32
