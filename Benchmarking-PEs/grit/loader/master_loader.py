@@ -787,8 +787,8 @@ def precompute_gpse(cfg, dataset):
             tmp_store[name] = (tmp_store_data, tmp_store_slices)
 
     loader = DataLoader(dataset, batch_size=cfg.posenc_GPSE.loader.batch_size,
-                        shuffle=False, num_workers=cfg.num_workers,
-                        pin_memory=True, persistent_workers=cfg.num_workers > 0)
+                        shuffle=False, num_workers=0,
+                        pin_memory=True, persistent_workers=False)
 
     # Batched GPSE precomputation loop
     data_list = []
