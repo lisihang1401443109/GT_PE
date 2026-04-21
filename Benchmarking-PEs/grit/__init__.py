@@ -27,8 +27,6 @@ from torch_geometric.graphgym.register import (register_loader,
 from grit.loader.master_loader import load_dataset_master
 register_loader('master_loader', load_dataset_master)
 
-from grit.head.weighted_add_pool_head import GNNWeightedAddPoolHead
-register_head('weighted_add_pool_head', GNNWeightedAddPoolHead)
 
 from grit.encoder.gnn_encoder import GNNNodeEncoder
 register_node_encoder('GNNNodeEncoder', GNNNodeEncoder)
