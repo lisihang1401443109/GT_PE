@@ -149,6 +149,8 @@ if __name__ == '__main__':
         if cfg.get("auto_select_device", False):
             auto_select_device()
         else:
+            if cfg.accelerator == 'auto':
+                cfg.accelerator = 'cuda' if torch.cuda.is_available() else 'cpu'
             cfg.device = cfg.accelerator # "cuda:0"
         # ------------------------------------------------------------
 
