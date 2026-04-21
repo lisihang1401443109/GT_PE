@@ -12,15 +12,25 @@ def _pad_and_stack(x1: torch.Tensor, x2: torch.Tensor, pad1: int, pad2: int):
 
 
 def _apply_index(batch, virtual_node: bool, pad_node: int, pad_graph: int):
-    graph_pred, graph_true = batch.graph_feature, batch.y_graph
-    node_pred, node_true = batch.node_feature, batch.y
+    graph_pred = batch.graph_feature
+    graph_true = getattr(batch, 'y_graph', None)
+    
+    node_pred = batch.node_feature
+    node_true = getattr(batch, 'y', None)
+    
     if virtual_node:
         # Remove virtual node
         idx = torch.concat([
             torch.where(batch.batch == i)[0][:-1]
             for i in range(batch.batch.max().item() + 1)
         ])
-        node_pred, node_true = node_pred[idx], node_true[idx]
+        node_pred = node_pred[idx]
+        if node_true is not None:
+            node_true = node_true[idx]
+
+    # If labels are missing, just return predictions and None
+    if graph_true is None or node_true is None:
+        return (node_pred, graph_pred), (node_true, graph_true)
 
     # Stack node predictions on top of graph predictions and pad with zeros
     pred = _pad_and_stack(node_pred, graph_pred, pad_node, pad_graph)
