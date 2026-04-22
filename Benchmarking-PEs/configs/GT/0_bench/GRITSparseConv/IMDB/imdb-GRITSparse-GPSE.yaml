@@ -50,6 +50,25 @@ model:
   loss_fun: cross_entropy
   edge_decoding: dot
   graph_pooling: none
+gt:
+  layer_type: GritTransformer
+  layers: 3
+  n_heads: 8
+  dim_hidden: 64
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+  sparse: True
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: "relu"
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
 gnn:
   head: inductive_node
   layers_pre_mp: 1
