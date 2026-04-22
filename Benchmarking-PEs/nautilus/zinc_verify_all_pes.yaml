@@ -35,7 +35,7 @@ spec:
 
               # Clone repo using verified token URL
               echo "Cloning repository (branch: benchmark_pe_gpse)..."
-              git clone --branch benchmark_pe_gpse https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+              git clone --branch benchmark-zinc https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
               cd GT_PE/Benchmarking-PEs
 
               echo "Git Commit:"
@@ -49,11 +49,13 @@ spec:
               source /opt/conda/etc/profile.d/conda.sh
               conda activate GTPE
 
-              # Link datasets and pre-trained weights
+              # Link datasets, pre-trained weights, and results
               echo "Linking PVC data..."
               mkdir -p datasets
               ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
               ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+              mkdir -p /mnt/pvc/GT_PE/Benchmarking-PEs/results
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results .
 
               # Map index to PE and WandB name
               if [ "$JOB_COMPLETION_INDEX" -eq 0 ]; then
