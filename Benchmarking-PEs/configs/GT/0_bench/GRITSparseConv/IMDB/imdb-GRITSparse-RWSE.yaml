@@ -27,6 +27,8 @@ posenc_RWSE:
   kernel:
     times_func: range(1, 17)
   dim_pe: 16
+  model: Linear
+  layers: 3
   raw_norm_type: BatchNorm
 train:
   mode: custom
