@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: imdb-debug-pod
+  namespace: gp-engine-malof
+  labels:
+    app: grit-debug
+spec:
+  containers:
+    - name: gpu-container
+      image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -e
+          echo "--- Starting IMDB Debug Pod ---"
+          apt-get update && apt-get install -y git vim htop tmux
+
+          # Setup workspace
+          cd ~
+          if [ ! -d "GT_PE" ]; then
+            echo "Cloning repository..."
+            git clone --branch benchmark_pe_gpse https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+          fi
+
+          cd GT_PE/Benchmarking-PEs
+          bash setup_environment.sh
+
+          # Link data
+          mkdir -p datasets
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+          echo "Debug environment ready. Source ~/venv/bin/activate to begin."
+          echo "Alternatively, use: conda activate GTPE"
+          tail -f /dev/null
+      resources:
+        limits:
+          nvidia.com/gpu: "1"
+          memory: "16Gi"
+          cpu: "4"
+        requests:
+          nvidia.com/gpu: "1"
+          memory: "16Gi"
+          cpu: "4"
+      volumeMounts:
+        - name: data-volume
+          mountPath: "/mnt/pvc"
+        - name: dshm
+          mountPath: "/dev/shm"
+  volumes:
+    - name: data-volume
+      persistentVolumeClaim:
+        claimName: sihang-test-pvc
+    - name: dshm
+      emptyDir:
+        medium: Memory
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                  - ry-gpu-08.sdsc.optiputer.net
+                  - k8s-haosu-06.sdsc.optiputer.net
+  restartPolicy: Never
+  tolerations:
+    - key: "nautilus.io/gp-engine-malof"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "nvidia.com/gpu"
+      operator: "Exists"
+      effect: "PreferNoSchedule"

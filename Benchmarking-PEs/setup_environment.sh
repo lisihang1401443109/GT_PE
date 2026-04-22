@@ -8,12 +8,12 @@ echo "Initializing Conda..."
 source /opt/conda/etc/profile.d/conda.sh
 conda config --set solver libmamba || echo "libmamba solver not available, using default."
 
-ENV_PATH="$HOME/venv"
-echo "Creating dynamic environment at $ENV_PATH..."
+ENV_NAME="GTPE"
+echo "Creating dynamic environment $ENV_NAME..."
 
 # Create environment with Python 3.9
-conda create -p "$ENV_PATH" python=3.9 -y
-conda activate "$ENV_PATH"
+conda create -n "$ENV_NAME" python=3.9 -y
+conda activate "$ENV_NAME"
 
 echo "Installing PyTorch 2.3.0..."
 # Install torch via pip with no-cache to ensure clean matching wheels

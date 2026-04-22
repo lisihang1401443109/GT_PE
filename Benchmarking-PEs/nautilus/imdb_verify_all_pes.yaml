@@ -1,0 +1,132 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-multi-pe-verify
+  namespace: gp-engine-malof
+  labels:
+    app: grit-verify
+    target: imdb
+spec:
+  completions: 4
+  parallelism: 4
+  completionMode: Indexed
+  template:
+    metadata:
+      labels:
+        app: grit-verify
+        target: imdb
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              echo "--- Starting IMDB Multi-PE Verification Pod ---"
+
+              # Install git
+              apt-get update && apt-get install -y git
+
+              # Setup workspace in HOME
+              cd ~
+              rm -rf GT_PE
+
+              # Clone repo using verified token URL
+              echo "Cloning repository (branch: benchmark_pe_gpse)..."
+              git clone --branch benchmark_pe_gpse https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+
+              echo "Git Commit:"
+              git rev-parse HEAD
+
+              # Run dynamic setup script
+              echo "Running dynamic environment setup script..."
+              bash setup_environment.sh
+
+              # Initialize conda
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+
+              # Link datasets and pre-trained weights
+              echo "Linking PVC data..."
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+              # Map index to PE and WandB name
+              if [ "$JOB_COMPLETION_INDEX" -eq 0 ]; then
+                PE="GPSE"
+                CFG="configs/GT/0_bench/GRITSparseConv/IMDB/imdb-GRITSparse-GPSE.yaml"
+              elif [ "$JOB_COMPLETION_INDEX" -eq 1 ]; then
+                PE="LapPE"
+                CFG="configs/GT/0_bench/GRITSparseConv/IMDB/imdb-GRITSparse-LapPE.yaml"
+              elif [ "$JOB_COMPLETION_INDEX" -eq 2 ]; then
+                PE="RWSE"
+                CFG="configs/GT/0_bench/GRITSparseConv/IMDB/imdb-GRITSparse-RWSE.yaml"
+              elif [ "$JOB_COMPLETION_INDEX" -eq 3 ]; then
+                PE="noPE"
+                CFG="configs/GT/0_bench/GRITSparseConv/IMDB/imdb-GRITSparse-noPE.yaml"
+              fi
+
+              WANDB_NAME="Verify-IMDB-$PE"
+              EXTRA_ARGS="wandb.entity sihang-personal wandb.use True wandb.name $WANDB_NAME train.batch_size 32"
+
+              if [ "$PE" == "GPSE" ]; then
+                EXTRA_ARGS="$EXTRA_ARGS posenc_GPSE.loader.batch_size 1 posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt"
+              fi
+
+              echo "Executing: $PE with WandB Name: $WANDB_NAME"
+
+              LOG_DIR="/mnt/pvc/GT_PE/Benchmarking-PEs/logs"
+              mkdir -p "$LOG_DIR"
+              LOG_FILE="$LOG_DIR/verify_imdb_${PE}.log"
+
+              python main.py --cfg "$CFG" --repeat 1 $EXTRA_ARGS > "$LOG_FILE" 2>&1
+          env:
+            - name: WANDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wandb-api-key
+                  key: WANDB_API_KEY
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "16Gi"
+              cpu: "4"
+            requests:
+              nvidia.com/gpu: "1"
+              memory: "16Gi"
+              cpu: "4"
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: sihang-test-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - ry-gpu-08.sdsc.optiputer.net
+                      - k8s-haosu-06.sdsc.optiputer.net
+      restartPolicy: Never
+      tolerations:
+        - key: "nautilus.io/gp-engine-malof"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "PreferNoSchedule"
+  backoffLimit: 4

@@ -10,7 +10,6 @@ weights/
 *.pt
 *.zip
 *.log
-nautilus/
 *.tar.gz
 *.error
 sanity_error.log
