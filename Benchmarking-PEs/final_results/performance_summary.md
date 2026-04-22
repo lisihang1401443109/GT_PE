@@ -27,8 +27,3 @@ This directory contains the final comparative analysis and visualizations for th
 
 ### IMDB Benchmark Comparison
 ![IMDB Curves](imdb_comparison_chart.png)
-
-## 3. Infrastructure & Methodology
-- All models were trained using the **GRITSparseConv** architecture.
-- Pascal-VOC verification is currently running on high-capacity A100-80GB nodes to accommodate complex superpixel graphs.
-- Positional encodings were computed either upfront (ZINC/IMDB) or on-the-fly (VOC) to optimize memory usage.
