@@ -20,7 +20,7 @@ dataset:
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: TypeDictEdge
-  edge_encoder_num_types: 1
+  edge_encoder_num_types: 4
   edge_encoder_bn: False
 posenc_RWSE:
   enable: True

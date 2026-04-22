@@ -48,8 +48,9 @@ def preformat_IMDB(dataset_dir, name):
     h_data.test_mask = new_test_mask
     h_data.y = new_y
     
-    # Add dummy edge attributes (all type 0) for GRIT edge attention
-    h_data.edge_attr = torch.zeros(h_data.num_edges, dtype=torch.long)
+    # Use categorical edge-type encoding (0-3) preserved from heterogeneity
+    # This satisfy GRIT's requirement for edge features while providing relational bias
+    h_data.edge_attr = h_data.edge_type.long()
     
     # Update dataset object
     dataset._data_list = [h_data]
