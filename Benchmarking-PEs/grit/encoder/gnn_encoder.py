@@ -49,7 +49,8 @@ def gpse_process_batch(model, batch) -> Tuple[torch.Tensor, torch.Tensor]:
         # are set, and the default node features for the virtual node are all
         # zeros). Can potentially test if initializing virtual node features to
         # random features is better than setting them to zeros.
-        for i in batch.ptr[1:]:
+        ptr = batch.ptr if hasattr(batch, 'ptr') and batch.ptr is not None else torch.tensor([0, n], device=batch.x.device)
+        for i in ptr[1:]:
             batch.x[i - 1] = 0
 
     # Generate encodings using the pretrained encoder
