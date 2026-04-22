@@ -21,7 +21,7 @@ spec:
           cd ~
           if [ ! -d "GT_PE" ]; then
             echo "Cloning repository..."
-            git clone --branch benchmark-imdb https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+            git clone --branch benchmark-imdb https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
           fi
 
           cd GT_PE/Benchmarking-PEs
@@ -38,12 +38,18 @@ spec:
       resources:
         limits:
           nvidia.com/gpu: "1"
-          memory: "16Gi"
-          cpu: "4"
+          memory: "32Gi"
+          cpu: "8"
         requests:
           nvidia.com/gpu: "1"
-          memory: "16Gi"
-          cpu: "4"
+          memory: "32Gi"
+          cpu: "8"
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-token
+              key: token
       volumeMounts:
         - name: data-volume
           mountPath: "/mnt/pvc"

@@ -137,4 +137,4 @@ spec:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "PreferNoSchedule"
-  backoffLimit: 0
+  backoffLimit: 3
