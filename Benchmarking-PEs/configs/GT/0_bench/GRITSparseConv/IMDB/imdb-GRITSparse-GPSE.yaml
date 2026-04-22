@@ -11,7 +11,7 @@ wandb:
 dataset:
   format: PyG-IMDB
   name: MULTI
-  task: graph
+  task: node
   task_type: classification
   transductive: False
   node_encoder: True
@@ -49,6 +49,18 @@ model:
   type: GritTransformer
   loss_fun: cross_entropy
   edge_decoding: dot
-  graph_pooling: mean
+  graph_pooling: none
+gnn:
+  head: inductive_node
+  layers_pre_mp: 1
+  layers_post_mp: 3
+  dim_inner: 64
+  layer_type: generalconv
+  stage_type: stack
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
 graph_gym:
   max_epoch: 400
