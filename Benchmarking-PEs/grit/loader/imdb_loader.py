@@ -54,8 +54,8 @@ def preformat_IMDB(dataset_dir, name):
     
     # Set split_idxs for GraphGym compatibility (as node indices)
     # Note: For task: node, GraphGym uses these as node indices.
-    dataset.split_idxs = [new_train_mask.nonzero().view(-1).tolist(),
-                          new_val_mask.nonzero().view(-1).tolist(),
-                          new_test_mask.nonzero().view(-1).tolist()]
+    dataset.split_idxs = [new_train_mask.nonzero().view(-1),
+                          new_val_mask.nonzero().view(-1),
+                          new_test_mask.nonzero().view(-1)]
     
     return dataset
