@@ -21,8 +21,10 @@ dataset:
   edge_encoder: False
 posenc_RWSE:
   enable: True
-  model_dir: pretrained/gpse_model_molpcba_1.0.pt
-  dim_pe: 32
+  kernel:
+    times_func: range(1, 17)
+  dim_pe: 16
+  raw_norm_type: BatchNorm
 train:
   mode: custom
   batch_size: 32

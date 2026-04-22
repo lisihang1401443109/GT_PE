@@ -70,12 +70,16 @@ def gpse_process_batch(model, batch) -> Tuple[torch.Tensor, torch.Tensor]:
         pbar = trange(batch.num_nodes, position=2)
         for i, batch in enumerate(loader):
             out, _ = model(batch.to(device))
+            if isinstance(out, (list, tuple)):
+                out = out[0]
             out = out[:batch.batch_size].to("cpu", non_blocking=True)
             out_list.append(out)
             pbar.update(batch.batch_size)
         out = torch.vstack(out_list)
     elif cfg.posenc_GPSE.loader.type == "full":
         out, _ = model(batch.to(device))
+        if isinstance(out, (list, tuple)):
+            out = out[0]
         out = out.to("cpu")
     else:
         raise ValueError(f"Unknown loader: {cfg.posenc_GPSE.loader.type!r}")

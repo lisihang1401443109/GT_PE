@@ -21,8 +21,14 @@ dataset:
   edge_encoder: False
 posenc_LapPE:
   enable: True
-  model_dir: pretrained/gpse_model_molpcba_1.0.pt
-  dim_pe: 32
+  eigen:
+    laplacian_norm: none
+    eigvec_norm: L2
+    max_freqs: 10
+  model: DeepSet
+  dim_pe: 16
+  layers: 2
+  raw_norm_type: none
 train:
   mode: custom
   batch_size: 32

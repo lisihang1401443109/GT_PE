@@ -21,8 +21,6 @@ dataset:
   edge_encoder: False
 posenc_noPE:
   enable: True
-  model_dir: pretrained/gpse_model_molpcba_1.0.pt
-  dim_pe: 32
 train:
   mode: custom
   batch_size: 32
