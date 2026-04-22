@@ -19,8 +19,8 @@ dataset:
   node_encoder_num_types: 1
   node_encoder_bn: False
   edge_encoder: False
-posenc_noPE:
-  enable: True
+posenc_RWSE:
+  enable: False
 train:
   mode: custom
   batch_size: 32
