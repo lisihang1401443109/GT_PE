@@ -18,7 +18,10 @@ dataset:
   node_encoder_name: LinearNode+LapPE
   node_encoder_num_types: 1
   node_encoder_bn: False
-  edge_encoder: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 1
+  edge_encoder_bn: False
 posenc_LapPE:
   enable: True
   eigen:

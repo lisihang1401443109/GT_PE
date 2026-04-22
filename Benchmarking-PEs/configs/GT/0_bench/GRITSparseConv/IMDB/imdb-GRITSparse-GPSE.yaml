@@ -18,7 +18,10 @@ dataset:
   node_encoder_name: LinearNode+GPSE
   node_encoder_num_types: 1
   node_encoder_bn: False
-  edge_encoder: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 1
+  edge_encoder_bn: False
 posenc_GPSE:
   enable: True
   model_dir: pretrained/gpse_model_molpcba_1.0.pt
