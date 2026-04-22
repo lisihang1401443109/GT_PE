@@ -73,11 +73,11 @@ spec:
               fi
 
               WANDB_NAME="Verify-VOC-$PE"
-              EXTRA_ARGS="wandb.entity sihang-personal wandb.use True wandb.name $WANDB_NAME train.batch_size 50"
+              EXTRA_ARGS="wandb.entity sihang-personal wandb.use True wandb.name $WANDB_NAME train.batch_size 16"
 
               if [ "$PE" == "GPSE" ]; then
                 # Optimized for GPSE precomputation memory
-                EXTRA_ARGS="$EXTRA_ARGS posenc_GPSE.loader.batch_size 1 posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt"
+                EXTRA_ARGS="$EXTRA_ARGS dataset.pe_transform_on_the_fly True posenc_GPSE.loader.batch_size 1 posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt"
               fi
 
               echo "Executing: $PE with WandB Name: $WANDB_NAME"

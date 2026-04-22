@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: voc-high-cap-test-job
+  namespace: gp-engine-malof
+spec:
+  template:
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c", "sleep infinity"]
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "128Gi"
+              cpu: "16"
+            requests:
+              nvidia.com/gpu: "1"
+              memory: "128Gi"
+              cpu: "16"
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: sihang-test-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values:
+                      - NVIDIA-A100-SXM4-80GB
+                      - NVIDIA-A100-PCIE-40GB
+                      - NVIDIA-A30
+      tolerations:
+        - key: "nautilus.io/gp-engine-malof"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "PreferNoSchedule"
+      restartPolicy: Never
+  backoffLimit: 0
