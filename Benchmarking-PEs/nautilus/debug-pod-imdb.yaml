@@ -21,7 +21,7 @@ spec:
           cd ~
           if [ ! -d "GT_PE" ]; then
             echo "Cloning repository..."
-            git clone --branch benchmark_pe_gpse https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+            git clone --branch benchmark-imdb https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
           fi
 
           cd GT_PE/Benchmarking-PEs

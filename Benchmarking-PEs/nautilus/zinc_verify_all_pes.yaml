@@ -35,7 +35,7 @@ spec:
 
               # Clone repo using verified token URL
               echo "Cloning repository (branch: benchmark_pe_gpse)..."
-              git clone --branch benchmark-zinc https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+              git clone --branch benchmark-zinc https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
               cd GT_PE/Benchmarking-PEs
 
               echo "Git Commit:"
@@ -92,6 +92,11 @@ spec:
                 secretKeyRef:
                   name: wandb-api-key
                   key: WANDB_API_KEY
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: token
           resources:
             limits:
               nvidia.com/gpu: "1"

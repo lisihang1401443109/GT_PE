@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grit-test-pod
+  namespace: gp-engine-malof
+spec:
+  containers:
+    - name: test-container
+      image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          apt-get update && apt-get install -y git
+          sleep infinity
+      resources:
+        limits:
+          nvidia.com/gpu: 1
+          memory: 32Gi
+          cpu: 8
+        requests:
+          nvidia.com/gpu: 1
+          memory: 32Gi
+          cpu: 8
+      volumeMounts:
+        - name: sihang-test-pvc
+          mountPath: /mnt/pvc
+  volumes:
+    - name: sihang-test-pvc
+      persistentVolumeClaim:
+        claimName: sihang-test-pvc
+  restartPolicy: Never

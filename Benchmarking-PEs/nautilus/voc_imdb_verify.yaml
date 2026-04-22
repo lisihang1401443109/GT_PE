@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grit-voc-imdb-verify
+  namespace: gp-engine-malof
+spec:
+  completions: 2
+  parallelism: 2
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              echo "--- Starting VOC/IMDB Verification (Index: ${JOB_COMPLETION_INDEX}) ---"
+
+              # Install git
+              echo "Installing git..."
+              apt-get update && apt-get install -y git
+
+              # Setup workspace in HOME
+              cd ~
+              rm -rf GT_PE
+              git clone --branch benchmark-voc https://<GITHUB_TOKEN>@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+              echo "Git Commit:"
+              git rev-parse HEAD
+              echo "Grit Init Content:"
+              cat grit/__init__.py
+
+              # Run dynamic setup script
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+
+              # Link datasets from PVC
+              echo "Linking datasets from PVC..."
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+              echo "Running benchmark..."
+
+              # Select Config based on Index
+              if [ "$JOB_COMPLETION_INDEX" -eq 0 ]; then
+                CFG="configs/GT/0_bench/GRITSparseConv/LRGB/VOC/voc-GRITSparse-GPSE.yaml"
+                echo "Target: VOC Superpixels"
+              else
+                CFG="configs/GT/0_bench/GRITSparseConv/IMDB/imdb-GRITSparse-GPSE.yaml"
+                echo "Target: IMDB"
+              fi
+
+              echo "Running benchmark with $CFG (batch_size=16, gpse_batch=1)..."
+              export PYTHONUNBUFFERED=1
+              mkdir -p /mnt/pvc/GT_PE/Benchmarking-PEs/logs
+              python main.py --cfg "$CFG" --repeat 1 train.batch_size 16 \
+                posenc_GPSE.loader.batch_size 1 \
+                posenc_GPSE.model_dir "/root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt" \
+                2>&1 | tee "/mnt/pvc/GT_PE/Benchmarking-PEs/logs/voc_imdb_verify_${JOB_COMPLETION_INDEX}.log"
+          env:
+            - name: WANDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wandb-api-key
+                  key: WANDB_API_KEY
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+              memory: 32Gi
+              cpu: 8
+            requests:
+              nvidia.com/gpu: 1
+              memory: 32Gi
+              cpu: 8
+          volumeMounts:
+            - name: sihang-test-pvc
+              mountPath: /mnt/pvc
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: sihang-test-pvc
+          persistentVolumeClaim:
+            claimName: sihang-test-pvc
+        - name: shm
+          emptyDir:
+            medium: Memory
+      restartPolicy: OnFailure
+  backoffLimit: 1

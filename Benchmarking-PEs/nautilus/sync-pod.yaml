@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grit-sync-pod
+  namespace: gp-engine-malof
+spec:
+  containers:
+    - name: sync-container
+      image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          apt-get update && apt-get install -y git
+          echo "Git installed. Sync pod ready for manual commands."
+          sleep infinity
+      volumeMounts:
+        - name: sihang-test-pvc
+          mountPath: /mnt/pvc
+  volumes:
+    - name: sihang-test-pvc
+      persistentVolumeClaim:
+        claimName: sihang-test-pvc
+  restartPolicy: Never
