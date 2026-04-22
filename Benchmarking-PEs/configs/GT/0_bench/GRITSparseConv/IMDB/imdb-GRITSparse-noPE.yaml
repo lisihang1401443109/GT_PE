@@ -15,7 +15,7 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: TypeDictNode+noPE
+  node_encoder_name: LinearNode
   node_encoder_num_types: 1
   node_encoder_bn: False
   edge_encoder: False
