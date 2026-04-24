@@ -26,7 +26,7 @@ dataset:
 posenc_GPSE:
   enable: true
   rand_type: NormalSE
-  model_dir: /itet-stor/jiaxie/net_scratch/pe4gt/pretrained/gpse_model_molpcba_1.0.pt
+  model_dir: /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt
   dim_pe: 32
   use_repr: true
   repr_type: no_post_mp
@@ -43,7 +43,7 @@ posenc_GPSE:
     layers_post_mp: 2
     dim_inner: 512
     layer_type: resgatedgcnconv
-    multi_head_dim_inner: 32  # use dim_inner if None
+    multi_head_dim_inner: 32 # use dim_inner if None
     stage_type: skipsum
     batchnorm: true
     act: relu
@@ -52,7 +52,7 @@ posenc_GPSE:
     normalize_adj: false
 train:
   mode: custom
-#  batch_size: 32
+  #  batch_size: 32
   batch_size: 16
   eval_period: 1
   ckpt_period: 100
@@ -72,7 +72,7 @@ gt:
   sparse: False
   attn:
     clamp: 5.
-    act: 'relu'
+    act: "relu"
     full_attn: True
     edge_enhance: False
     O_e: True
@@ -82,7 +82,7 @@ gnn:
   head: default
   layers_pre_mp: 0
   layers_post_mp: 2 # Not used when `gnn.head: san_graph`
-  dim_inner: 96  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dim_inner: 96 # `gt.dim_hidden` must match `gnn.dim_inner`
   batchnorm: True
   act: relu
   dropout: 0.0
