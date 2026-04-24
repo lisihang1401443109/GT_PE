@@ -1,0 +1,81 @@
+out_dir: results
+metric_best: f1
+metric_agg: argmax
+accelerator: "cuda:0"
+num_workers: 4
+wandb:
+  use: True
+  project: "PEGT"
+  name: "IMDB-GraphGPS-GAT-RWSE"
+  entity: sihang-personal
+dataset:
+  format: PyG-IMDB
+  name: MULTI
+  task: node
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: LinearNode+RWSE
+  node_encoder_num_types: 1
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 4
+  edge_encoder_bn: False
+posenc_RWSE:
+  enable: True
+  kernel:
+    times:
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  model: MLP
+  dim_pe: 20
+  layers: 3
+  raw_norm_type: BatchNorm
+train:
+  mode: custom
+  batch_size: 32
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: GPSModel
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: none
+gt:
+  layer_type: GAT+None
+  layers: 3
+  n_heads: 8
+  dim_hidden: 64
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: "relu"
+    full_attn: False
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn:
+  head: inductive_node
+  layers_pre_mp: 1
+  layers_post_mp: 3
+  dim_inner: 64
+  layer_type: generalconv
+  stage_type: stack
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-5
+  base_lr: 1e-3
+  max_epoch: 400
+  num_warmup_epochs: 10
+  scheduler: cosine_with_warmup
