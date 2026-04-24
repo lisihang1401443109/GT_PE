@@ -43,6 +43,8 @@ spec:
                       - NVIDIA-A100-SXM4-80GB
                       - NVIDIA-A100-PCIE-40GB
                       - NVIDIA-A30
+                      - NVIDIA-GeForce-GTX-1080-Ti
+                      - NVIDIA-GeForce-RTX-3090
       tolerations:
         - key: "nautilus.io/gp-engine-malof"
           operator: "Exists"
