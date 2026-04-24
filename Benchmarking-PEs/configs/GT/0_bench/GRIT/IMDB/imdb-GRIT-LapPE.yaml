@@ -1,0 +1,77 @@
+out_dir: results
+metric_best: f1
+metric_agg: argmax
+accelerator: "cuda:0"
+num_workers: 4
+wandb:
+  use: True
+  project: PEGT
+  name: "IMDB-GRIT-LapPE"
+  entity: sihang-personal
+dataset:
+  format: PyG-IMDB
+  name: MULTI
+  task: node
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: LinearNode+LapPE
+  node_encoder_num_types: 1
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 4
+  edge_encoder_bn: False
+posenc_LapPE:
+  enable: True
+  eigen:
+    laplacian_norm: none
+    eigvec_norm: L2
+    max_freqs: 10
+  model: DeepSet
+  dim_pe: 16
+  layers: 2
+  raw_norm_type: none
+train:
+  mode: custom
+  batch_size: 32
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: GritTransformer
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: none
+gt:
+  layer_type: GritTransformer
+  layers: 3
+  n_heads: 8
+  dim_hidden: 64
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+  sparse: False
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: "relu"
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn:
+  head: inductive_node
+  layers_pre_mp: 1
+  layers_post_mp: 3
+  dim_inner: 64
+  layer_type: generalconv
+  stage_type: stack
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+graph_gym:
+  max_epoch: 400

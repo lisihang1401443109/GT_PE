@@ -1,0 +1,97 @@
+out_dir: results
+metric_best: f1
+metric_agg: argmax
+accelerator: "cuda:0"
+num_workers: 4
+wandb:
+  use: True
+  project: PEGT
+  name: "IMDB-GRIT-GPSE"
+  entity: sihang-personal
+dataset:
+  format: PyG-IMDB
+  name: MULTI
+  task: node
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: LinearNode+GPSE
+  node_encoder_num_types: 1
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 4
+  edge_encoder_bn: False
+posenc_GPSE:
+  enable: True
+  rand_type: NormalSE
+  model_dir: pretrained/gpse_model_molpcba_1.0.pt
+  dim_pe: 32
+  use_repr: true
+  repr_type: no_post_mp
+  model: mlp
+  layers: 2
+  virtual_node: true
+  input_dropout_be: 0.5
+  input_dropout_ae: 0.0
+  raw_norm_type: BatchNorm
+  loader:
+    type: neighbor
+    batch_size: 1
+  gnn_cfg:
+    head: inductive_hybrid_multi
+    layers_pre_mp: 1
+    layers_mp: 20
+    layers_post_mp: 2
+    dim_inner: 512
+    layer_type: resgatedgcnconv
+    multi_head_dim_inner: 32 # use dim_inner if None
+    stage_type: skipsum
+    batchnorm: true
+    act: relu
+    dropout: 0.2
+    agg: mean
+    normalize_adj: false
+train:
+  mode: custom
+  batch_size: 32
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: GritTransformer
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: none
+gt:
+  layer_type: GritTransformer
+  layers: 3
+  n_heads: 8
+  dim_hidden: 64
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+  sparse: False
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: "relu"
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn:
+  head: inductive_node
+  layers_pre_mp: 1
+  layers_post_mp: 3
+  dim_inner: 64
+  layer_type: generalconv
+  stage_type: stack
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+graph_gym:
+  max_epoch: 400
