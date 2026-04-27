@@ -1,7 +1,12 @@
-apiVersion: batch/v1
+import os
+
+lrs = ["0.0001", "0.001", "0.005"]
+pes = ["noPE", "LapPE", "RWSE", "GPSE"]
+
+template = """apiVersion: batch/v1
 kind: Job
 metadata:
-  name: grit-peptides-struct-lr-0005
+  name: grit-peptides-struct-lr-{lr_clean}
   namespace: gp-engine-malof
 spec:
   template:
@@ -19,11 +24,11 @@ spec:
             source /opt/conda/bin/activate grit &&
             
             # Map index to PE
-            PE_LIST=(noPE LapPE RWSE GPSE)
-            PE=${PE_LIST[$JOB_COMPLETION_INDEX]}
-            CONFIG="configs/GT/0_bench/Peptides_Struct_LR_Sweep/peptides_struct-GRIT-$PE-LR-0.005.yaml"
+            PE_LIST=({pe_list_str})
+            PE=${{PE_LIST[$JOB_COMPLETION_INDEX]}}
+            CONFIG="configs/GT/0_bench/Peptides_Struct_LR_Sweep/peptides_struct-GRIT-$PE-LR-{lr}.yaml"
             
-            echo "Running experiment with PE: $PE and LR: 0.005"
+            echo "Running experiment with PE: $PE and LR: {lr}"
             python main.py --cfg $CONFIG --repeat 1 --mark_done
         env:
           - name: JOB_COMPLETION_INDEX
@@ -53,3 +58,18 @@ spec:
   completions: 4
   parallelism: 1
   completionMode: Indexed
+"""
+
+pe_list_str = " ".join(pes)
+
+for lr in lrs:
+    lr_clean = lr.replace(".", "")
+    manifest = template.format(
+        lr=lr,
+        lr_clean=lr_clean,
+        pe_list_str=pe_list_str
+    )
+    filename = f"nautilus/peptides_struct_lr_{lr}.yaml"
+    with open(filename, "w") as f:
+        f.write(manifest)
+    print(f"Generated {filename}")

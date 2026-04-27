@@ -38,8 +38,8 @@ spec:
             memory: "32Gi"
             nvidia.com/gpu: "1"
           requests:
-            cpu: "2"
-            memory: "16Gi"
+            cpu: "4"
+            memory: "32Gi"
             nvidia.com/gpu: "1"
         volumeMounts:
         - name: nfs-pvc
