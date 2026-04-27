@@ -34,7 +34,7 @@ posenc_RWSE:
   raw_norm_type: BatchNorm
 train:
   mode: custom
-  batch_size: 32
+  batch_size: 128
   eval_period: 1
   enable_ckpt: True
   ckpt_best: True
