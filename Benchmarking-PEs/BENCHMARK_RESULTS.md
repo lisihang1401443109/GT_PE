@@ -28,14 +28,21 @@ This document summarizes the results of a comprehensive benchmarking suite compa
 | | | RWSE | 0.6456 | 0.6012 | 0.4998 |
 | | | GPSE | 0.6321 | **0.6401** | **0.5835** |
 
+## ZINC LR Sensitivity (Sparse GRIT)
+
+| PE Variant | LR 1e-4 | LR 1e-3 | LR 5e-3 |
+| :--- | :--- | :--- | :--- |
+| **noPE** | 0.3148 | 0.2520 | 0.5059 (X) |
+| **LapPE** | 0.2432 | 0.1236 (Ref) | 0.4501 (X) |
+| **RWSE** | 0.2619 | 0.2351 | N/A |
+| **GPSE** | 0.2241 | **0.2223** | 0.4774 (X) |
+
+*(X) Indicates late-stage instability or premature failure. (Ref) Indicates previous record from verified baseline.*
+
+### Key Insights
+1. **LR 1e-3 sweet spot**: Most variants reached their peak performance at 1e-3. 
+2. **High-dimensional sensitivity**: GPSE maintains relatively high performance even at 1e-4, whereas LapPE/noPE see significant degradation.
+3. **Instability at 5e-3**: Standard AdamW learning rates (5e-3) frequently lead to training instability in Sparse GRIT variants on ZINC.
+
 ## Performance Visualizations
-
-### Dense GRIT
-![Dense GRIT Benchmarks](results/dense_grit_benchmarks.png)
-
-### GAT-GPS
-![GAT-GPS Benchmarks](results/gat_gps_benchmarks.png)
-
-## Archive Details
-- **Total Experiments**: 32
-- **Logs**: Archived raw logs are available in the repository's `plotting_data/` directory.
+...
