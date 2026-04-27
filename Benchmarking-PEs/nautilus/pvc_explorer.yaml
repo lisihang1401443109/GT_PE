@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-explorer
+  namespace: gp-engine-malof
+spec:
+  containers:
+    - name: explorer
+      image: alpine
+      command: [ "sleep", "infinity" ]
+      volumeMounts:
+        - name: data-volume
+          mountPath: "/mnt/pvc"
+  volumes:
+    - name: data-volume
+      persistentVolumeClaim: { claimName: sihang-test-pvc }
+  restartPolicy: Never
+  tolerations:
+    - {
+        key: "nautilus.io/gp-engine-malof",
+        operator: "Exists",
+        effect: "NoSchedule",
+      }

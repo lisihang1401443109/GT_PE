@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: grit-test-zinc
+  namespace: gp-engine-malof
+spec:
+  containers:
+    - name: gpu-container
+      image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+      command: [ "/bin/bash", "-c" ]
+      args:
+        - |
+          set -e
+          apt-get update && apt-get install -y git
+          cd ~
+          rm -rf GT_PE
+          git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+          cd GT_PE/Benchmarking-PEs
+          bash setup_environment.sh
+          source /opt/conda/etc/profile.d/conda.sh
+          conda activate GTPE
+          mkdir -p datasets
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+          # Run a single experiment (ZINC Sparse noPE)
+          CFG="configs/GT/0_bench/GRIT/zinc_sparse/zinc-GRIT-noPE-Sparse.yaml"
+
+          echo "Starting Test Run: ZINC-GRIT-noPE-Sparse"
+          python main.py --cfg $CFG wandb.use False
+
+          echo "Test Run Complete. Keeping pod alive for debugging..."
+          sleep infinity
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom: { secretKeyRef: { name: github-token, key: token } }
+      resources:
+        limits: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8", ephemeral-storage: "100Gi" }
+        requests: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8", ephemeral-storage: "50Gi" }
+      volumeMounts:
+        - name: data-volume
+          mountPath: "/mnt/pvc"
+        - name: dshm
+          mountPath: "/dev/shm"
+  volumes:
+    - name: data-volume
+      persistentVolumeClaim: { claimName: sihang-test-pvc }
+    - name: dshm
+      emptyDir: { medium: Memory }
+  restartPolicy: Never
+  tolerations:
+    - {
+        key: "nautilus.io/gp-engine-malof",
+        operator: "Exists",
+        effect: "NoSchedule",
+      }
+    - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
