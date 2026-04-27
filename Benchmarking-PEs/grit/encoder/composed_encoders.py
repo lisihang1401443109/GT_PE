@@ -115,6 +115,12 @@ ds_encs = {'Atom': AtomEncoder,
            'COCONode': COCONodeEncoder,
            'LinearNode': LinearNodeEncoder}
 
+# Register dataset-specific edge encoders.
+from torch_geometric.graphgym.register import register_edge_encoder
+from grit.encoder.example import ExampleEdgeEncoder as BondEncoder # Use the example Bond implementation
+register_edge_encoder('Bond', BondEncoder)
+register_edge_encoder('Atom', AtomEncoder) # For consistency if needed
+
 # Positional Encoding node encoders.
 pe_encs = {'LapPE': LapPENodeEncoder,
            'RWSE': RWSENodeEncoder,
