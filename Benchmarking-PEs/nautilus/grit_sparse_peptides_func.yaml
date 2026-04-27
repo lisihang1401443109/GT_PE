@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: grit-sparse-peptides_func
+  name: grit-sparse-peptides-func
   namespace: gp-engine-malof
 spec:
   backoffLimit: 0
