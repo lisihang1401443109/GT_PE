@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grit-peptides-struct-lr-5e-3
+  namespace: gp-engine-malof
+spec:
+  completions: 4
+  parallelism: 1
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+        - name: grit-bench
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              apt-get update && apt-get install -y git wget
+              git clone --branch fix/molpcba_encoders https://github.com/lisihang1401443109/GT_PE.git
+              cd GT_PE/Benchmarking-PEs
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+
+              # Map index to PE
+              PES=("noPE" "LapPE" "RWSE" "GPSE")
+              PE=${PES[$JOB_COMPLETION_INDEX]}
+              LR="0.005"
+
+              CONFIG="configs/GT/0_bench/Peptides_Struct_LR_Sweep/peptides_struct-GRIT-$PE-LR-$LR.yaml"
+              WANDB_NAME="Peptides-Struct-Sparse-$PE-LR-$LR"
+
+              echo "Running experiment: $WANDB_NAME"
+              python main.py --cfg $CONFIG --repeat 1 wandb.name $WANDB_NAME
+          env:
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+            - name: WANDB_API_KEY
+              value: "71542fba828b8433d76bdec593368297b819f71c"
+          resources:
+            limits:
+              cpu: "4"
+              memory: "32Gi"
+              nvidia.com/gpu: "1"
+            requests:
+              cpu: "4"
+              memory: "32Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: nfs-pvc
+              mountPath: /mnt/pvc
+      restartPolicy: Never
+      volumes:
+        - name: nfs-pvc
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+  backoffLimit: 0
