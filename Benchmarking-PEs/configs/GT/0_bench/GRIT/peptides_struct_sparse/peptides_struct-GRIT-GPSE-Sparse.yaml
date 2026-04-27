@@ -23,7 +23,7 @@ gt:
   attn:
     O_e: true
     act: relu
-    clamp: 5
+    clamp: 5.0
     edge_enhance: false
     full_attn: false
     norm_e: true
