@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grit-peptides-struct-lr-0001
+  namespace: gp-engine-malof
+spec:
+  template:
+    spec:
+      containers:
+      - name: grit-bench
+        image: nvidia/cuda:12.1.0-runtime-ubuntu22.04
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            apt-get update && apt-get install -y git wget bzip2 &&
+            git clone --branch fix/molpcba_encoders https://github.com/lisihang1401443109/GT_PE.git &&
+            cd GT_PE/Benchmarking-PEs &&
+            bash setup_environment.sh &&
+            source /opt/conda/bin/activate grit &&
+            
+            # Map index to PE
+            PE_LIST=(noPE LapPE RWSE GPSE)
+            PE=${PE_LIST[$JOB_COMPLETION_INDEX]}
+            CONFIG="configs/GT/0_bench/Peptides_Struct_LR_Sweep/peptides_struct-GRIT-$PE-LR-0.001.yaml"
+            
+            echo "Running experiment with PE: $PE and LR: 0.001"
+            python main.py --cfg $CONFIG --repeat 1 --mark_done
+        env:
+          - name: JOB_COMPLETION_INDEX
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          - name: WANDB_API_KEY
+            value: "71542fba828b8433d76bdec593368297b819f71c"
+        resources:
+          limits:
+            cpu: "4"
+            memory: "32Gi"
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: "2"
+            memory: "16Gi"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: nfs-pvc
+          mountPath: /mnt/pvc
+      restartPolicy: Never
+      volumes:
+      - name: nfs-pvc
+        persistentVolumeClaim:
+          claimName: nfs-pvc
+  backoffLimit: 1
+  completions: 4
+  parallelism: 1
+  completionMode: Indexed
