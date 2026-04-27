@@ -88,7 +88,7 @@ spec:
             mkdir -p "$LOG_DIR"
             LOG_FILE="$LOG_DIR/lr_sweep_zinc_grit_${{PE}}_{lr}.log"
             
-            python main.py --cfg "${{CONFIG}}" --repeat 1 wandb.use True wandb.name "${{WANDB_NAME}}" wandb.group "ZINC-LR-Sweep-GritSparse" > "${{LOG_FILE}}" 2>&1
+            python main.py --cfg "${{CONFIG}}" --repeat 1 wandb.use True wandb.name "${{WANDB_NAME}}" > "${{LOG_FILE}}" 2>&1
             
             echo "--- Completed ${{PE}} {lr} ---"
         env:
