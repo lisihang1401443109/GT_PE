@@ -45,11 +45,11 @@ spec:
               # Setup workspace
               cd ~
               rm -rf GT_PE
-              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              git clone --branch fix/molpcba_encoders https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
               cd GT_PE/Benchmarking-PEs
 
               git clean -fd
-              git reset --hard origin/benchmark_pe_gpse
+              git reset --hard origin/fix/molpcba_encoders
 
               bash setup_environment.sh
               source /opt/conda/etc/profile.d/conda.sh
