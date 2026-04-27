@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: peptides-struct-gpse-dense-reverify
+  namespace: gp-engine-malof
+spec:
+  template:
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              apt-get update && apt-get install -y git
+              cd ~
+              rm -rf GT_PE
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+              WANDB_NAME="Verify-Peptides-Struct-GPSE-Dense-Re-Run"
+              LOG_FILE="/mnt/pvc/GT_PE/Benchmarking-PEs/logs/verify_peptides_struct_dense_GPSE_rerun.log"
+              python main.py --cfg configs/GT/0_bench/GRIT/LRGB/peptides_struct/peptides-struct-GRIT-GPSE.yaml \
+                wandb.use True wandb.name $WANDB_NAME wandb.entity sihang-personal \
+                posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt \
+                > "$LOG_FILE" 2>&1
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8" }
+            requests: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      restartPolicy: Never
+      tolerations:
+        - {
+            key: "nautilus.io/gp-engine-malof",
+            operator: "Exists",
+            effect: "NoSchedule",
+          }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
+  backoffLimit: 0
