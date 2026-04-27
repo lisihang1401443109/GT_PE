@@ -1,0 +1,107 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pattern-all-models
+  namespace: gp-engine-malof
+  labels:
+    app: grit-verify
+    target: pattern
+    type: benchmark-all-models
+spec:
+  completions: 12
+  parallelism: 6
+  completionMode: Indexed
+  template:
+    metadata:
+      labels:
+        app: grit-verify
+        target: pattern
+        type: benchmark-all-models
+    spec:
+      restartPolicy: Never
+      priorityClassName: nice
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              PE_TYPES=("noPE" "LapPE" "RWSE" "GPSE")
+              MODEL_TYPES=("Dense-GRIT" "Sparse-GRIT" "GAT-GPS")
+
+              MODEL_IDX=$((JOB_COMPLETION_INDEX / 4))
+              PE_IDX=$((JOB_COMPLETION_INDEX % 4))
+
+              MODEL=${MODEL_TYPES[$MODEL_IDX]}
+              PE=${PE_TYPES[$PE_IDX]}
+
+              echo "--- Starting PATTERN Benchmark: $MODEL | $PE ---"
+
+              # Install git
+              apt-get update && apt-get install -y git
+
+              # Setup workspace
+              cd ~
+              rm -rf GT_PE
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+
+              git clean -fd
+              git reset --hard origin/benchmark_pe_gpse
+
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+              RESULTS_DIR="/mnt/pvc/GT_PE/Benchmarking-PEs/pattern_all_models_results"
+              mkdir -p "$RESULTS_DIR"
+              rm -rf results && ln -snf "$RESULTS_DIR" results
+
+              if [ "$MODEL" == "Dense-GRIT" ]; then
+                CONFIG="configs/GT/0_bench/GRIT/pattern/pattern-GRIT-${PE}.yaml"
+              elif [ "$MODEL" == "Sparse-GRIT" ]; then
+                CONFIG="configs/GT/0_bench/GRIT/pattern_sparse/pattern-GRIT-${PE}-Sparse.yaml"
+              elif [ "$MODEL" == "GAT-GPS" ]; then
+                CONFIG="configs/GT/0_bench/GraphGPS/pattern/pattern-GPS-${PE}.yaml"
+                # Adjust for GPS configs that might use slightly different naming
+                if [ ! -f "$CONFIG" ]; then
+                   CONFIG="configs/GT/0_bench/GraphGPS/pattern/pattern-GPS-GAT-${PE}.yaml"
+                fi
+              fi
+
+              WANDB_NAME="PATTERN-${MODEL}-${PE}"
+              echo "Executing: $CONFIG | WandB Name: $WANDB_NAME"
+              python main.py --cfg "${CONFIG}" --repeat 1 wandb.use True wandb.name "${WANDB_NAME}"
+              echo "--- Completed $MODEL | $PE ---"
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "4", ephemeral-storage: "100Gi" }
+            requests: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "4", ephemeral-storage: "50Gi" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      tolerations:
+        - {
+            key: "nautilus.io/gp-engine-malof",
+            operator: "Exists",
+            effect: "NoSchedule",
+          }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
+  backoffLimit: 0
