@@ -1,0 +1,102 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grit-molpcba-sparse
+  namespace: gp-engine-malof
+  labels:
+    app: grit-verify
+    target: molpcba
+    type: benchmark-sparse
+spec:
+  completions: 4
+  parallelism: 4
+  completionMode: Indexed
+  template:
+    metadata:
+      labels:
+        app: grit-verify
+        target: molpcba
+        type: benchmark-sparse
+    spec:
+      restartPolicy: Never
+      priorityClassName: nice
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              PE_TYPES=("noPE" "LapPE" "RWSE" "GPSE")
+              PE=${PE_TYPES[$JOB_COMPLETION_INDEX]}
+              echo "--- Starting MolPCBA GRIT Sparse Pod for $PE ---"
+
+              # Install git
+              apt-get update && apt-get install -y git
+
+              # Setup workspace in HOME
+              cd ~
+              rm -rf GT_PE
+              echo "Cloning repository (branch: benchmark_pe_gpse)..."
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+
+              # Ensure fresh state
+              git clean -fd
+              git reset --hard origin/benchmark_pe_gpse
+
+              # Run dynamic setup script
+              echo "Running dynamic environment setup script..."
+              bash setup_environment.sh
+
+              # Initialize conda
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+
+              # Link datasets and results
+              echo "Linking PVC data..."
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+              # Use data-specific results folder on PVC
+              RESULTS_DIR="/mnt/pvc/GT_PE/Benchmarking-PEs/molpcba_sparse_results"
+              mkdir -p "$RESULTS_DIR"
+              rm -rf results && ln -snf "$RESULTS_DIR" results
+
+              CONFIG="configs/GT/0_bench/GRIT/molpcba_sparse/molpcba-GRIT-${PE}-Sparse.yaml"
+              WANDB_NAME="MolPCBA-GRIT-${PE}-Sparse"
+
+              echo "Executing: $PE | Config: $CONFIG | WandB Name: $WANDB_NAME"
+
+              # Direct execution for observability
+              python main.py --cfg "${CONFIG}" --repeat 1 wandb.use True wandb.name "${WANDB_NAME}"
+
+              echo "--- Completed $PE ---"
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "48Gi", cpu: "4", ephemeral-storage: "100Gi" }
+            requests: { nvidia.com/gpu: "1", memory: "48Gi", cpu: "4", ephemeral-storage: "50Gi" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      tolerations:
+        - {
+            key: "nautilus.io/gp-engine-malof",
+            operator: "Exists",
+            effect: "NoSchedule",
+          }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
+  backoffLimit: 0
