@@ -27,6 +27,8 @@ gt:
   batch_norm: true
   dim_hidden: 64
   dropout: 0.0
+  full_graph: true
+  gamma: 1.0e-05
   layer_norm: false
   layer_type: origin_gt
   layers: 10
@@ -34,7 +36,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: zinc-OriginGT-GPSE
+  name: zinc-OriginGT-GPSE-Dense
   project: Exp
   use: false
 model:
@@ -77,6 +79,6 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  name: ZINC-OriginGT-GPSE
+  name: ZINC-OriginGT-GPSE-Dense
   project: PEGT
   use: false

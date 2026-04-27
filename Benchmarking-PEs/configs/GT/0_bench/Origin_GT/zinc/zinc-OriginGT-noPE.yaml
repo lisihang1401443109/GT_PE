@@ -8,7 +8,7 @@ dataset:
   name: subset
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: TypeDictNode+GPSE
+  node_encoder_name: TypeDictNode
   node_encoder_num_types: 21
   task: graph
   task_type: regression
@@ -34,7 +34,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: zinc-OriginGT-GPSE
+  name: zinc-OriginGT-noPE
   project: Exp
   use: false
 model:
@@ -52,11 +52,6 @@ optim:
   scheduler: cosine_with_warmup
   weight_decay: 1e-5
 out_dir: results
-posenc_GPSE:
-  dim_pe: 64
-  enable: true
-  model: Linear
-  raw_norm_type: none
 posenc_LapPE:
   dim_pe: 21
   eigen:
@@ -77,6 +72,6 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  name: ZINC-OriginGT-GPSE
+  name: ZINC-OriginGT-noPE
   project: PEGT
   use: false

@@ -1,78 +1,77 @@
-# Original: zinc-OriginGT-LapPE.yaml
-out_dir: results
-metric_best: mae
-metric_agg: argmin
-tensorboard_each_run: True
-accelerator: "cuda:0"
-repeat: 1
-mlflow:
-  use: False
-  project: Exp
-  name: zinc-OriginGT-LapPE
-wandb:
-  use: False
-  project: "PEGT"
-  name: "ZINC-OriginGT-LapPE"
+accelerator: cuda:0
 dataset:
-  format: PyG-ZINC
-  name: subset
-  task: graph
-  task_type: regression
-  transductive: False
-  node_encoder: True
-  node_encoder_name: TypeDictNode+LapPE
-  node_encoder_num_types: 21
-  node_encoder_bn: False
-  edge_encoder: True
+  edge_encoder: true
+  edge_encoder_bn: false
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
-  edge_encoder_bn: False
-posenc_LapPE:
-  enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 10
-  model: DeepSet
-  dim_pe: 21
-  layers: 2
-  raw_norm_type: none
-train:
-  mode: custom
-  batch_size: 32
-  eval_period: 1
-  enable_ckpt: True
-  ckpt_best: True
-  ckpt_clean: True
-model:
-  type: origin_gt
-  loss_fun: l1
-  edge_decoding: dot
-  graph_pooling: add
+  format: PyG-ZINC
+  name: subset
+  node_encoder: true
+  node_encoder_bn: false
+  node_encoder_name: TypeDictNode+LapPE
+  node_encoder_num_types: 21
+  task: graph
+  task_type: regression
+  transductive: false
+gnn:
+  act: relu
+  agg: mean
+  batchnorm: true
+  dim_inner: 64
+  dropout: 0.0
+  head: san_graph
+  layers_post_mp: 3
+  layers_pre_mp: 0
+  normalize_adj: false
 gt:
+  batch_norm: true
+  dim_hidden: 64
+  dropout: 0.0
+  layer_norm: false
   layer_type: origin_gt
   layers: 10
   n_heads: 8
-  dim_hidden: 64
-  dropout: 0.0
-  layer_norm: False
-  batch_norm: True
-gnn:
-  head: san_graph
-  layers_pre_mp: 0
-  layers_post_mp: 3
-  dim_inner: 64
-  batchnorm: True
-  act: relu
-  dropout: 0.0
-  agg: mean
-  normalize_adj: False
+metric_agg: argmin
+metric_best: mae
+mlflow:
+  name: zinc-OriginGT-LapPE
+  project: Exp
+  use: false
+model:
+  edge_decoding: dot
+  graph_pooling: add
+  loss_fun: l1
+  type: origin_gt
 optim:
-  clip_grad_norm: True
-  optimizer: adamW
-  weight_decay: 1e-5
   base_lr: 1e-3
+  clip_grad_norm: true
   max_epoch: 100
-  num_warmup_epochs: 50
-  scheduler: cosine_with_warmup
   min_lr: 1e-6
+  num_warmup_epochs: 50
+  optimizer: adamW
+  scheduler: cosine_with_warmup
+  weight_decay: 1e-5
+out_dir: results
+posenc_LapPE:
+  dim_pe: 21
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: none
+    max_freqs: 10
+  enable: true
+  layers: 2
+  model: DeepSet
+  raw_norm_type: none
+repeat: 1
+tensorboard_each_run: true
+train:
+  batch_size: 32
+  ckpt_best: true
+  ckpt_clean: true
+  enable_ckpt: true
+  eval_period: 1
+  mode: custom
+wandb:
+  name: ZINC-OriginGT-LapPE
+  project: PEGT
+  use: false

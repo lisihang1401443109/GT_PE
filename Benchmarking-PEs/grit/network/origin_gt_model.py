@@ -61,8 +61,12 @@ class GraphTransformer(torch.nn.Module):
         self.encoder = FeatureEncoder(dim_in)
         dim_in = self.encoder.dim_in
 
-        self.ablation = True
         self.ablation = False
+
+        if cfg.gt.full_graph:
+            self.fake_edge_emb = torch.nn.Embedding(1, cfg.gt.dim_hidden)
+        else:
+            self.fake_edge_emb = None
 
         # if cfg.posenc_RRWP.enable:
         #     self.rrwp_abs_encoder = register.node_encoder_dict["rrwp_linear"]\
@@ -96,6 +100,8 @@ class GraphTransformer(torch.nn.Module):
                 hidden_dim=cfg.gt.dim_hidden,
                 edge_in_dim=cfg.gt.dim_hidden,
                 num_heads=cfg.gt.n_heads,
+                full_graph=cfg.gt.full_graph,
+                fake_edge_emb=self.fake_edge_emb,
             ))
         # layers = []
 

@@ -13,6 +13,7 @@ from torch_geometric.nn.aggr import MultiAggregation
 from torch_geometric.graphgym.register import  *
 # GT-PyG
 from .nn.MLP import MLP
+from ..utils import negate_edge_index
 
 @register_layer('origin_gt')
 class GTConv(MessagePassing):
@@ -28,6 +29,8 @@ class GTConv(MessagePassing):
         norm: str = "bn",
         act: str = "relu",
         aggregators: List[str] = ["sum"],
+        full_graph: bool = False,
+        fake_edge_emb: Optional[nn.Embedding] = None,
     ):
         """
         Graph Transformer Convolution (GTConv) module.
@@ -48,6 +51,10 @@ class GTConv(MessagePassing):
             act (str, optional): Activation function name. Default is "relu".
             aggregators (List[str], optional): Aggregation methods for the messages aggregation.
                                                Default is ["sum"].
+            full_graph (bool, optional): Use a full graph attention mechanism.
+                                         Default is False
+            fake_edge_emb (nn.Embedding, optional): Embedding for fake edges.
+                                                    Default is None
         """
         super().__init__(node_dim=0, aggr=MultiAggregation(aggregators, mode="cat"))
 
@@ -125,6 +132,16 @@ class GTConv(MessagePassing):
         self.norm = norm.lower()
         self.gate = gate
         self.qkv_bias = qkv_bias
+        self.full_graph = full_graph
+        self.fake_edge_emb = fake_edge_emb
+        if self.full_graph:
+            self.gamma = nn.Parameter(torch.tensor(0.5, dtype=float),
+                                      requires_grad=True)
+            self.WQ_2 = nn.Linear(node_in_dim, hidden_dim, bias=qkv_bias)
+            self.WK_2 = nn.Linear(node_in_dim, hidden_dim, bias=qkv_bias)
+            self.WO_2 = nn.Linear(hidden_dim, node_in_dim, bias=True)
+            if self.edge_in_dim is not None:
+                self.WE_2 = nn.Linear(hidden_dim, hidden_dim, bias=True)
 
         self.reset_parameters()
 
@@ -141,6 +158,10 @@ class GTConv(MessagePassing):
         if self.edge_in_dim is not None:
             nn.init.xavier_uniform_(self.WE.weight)
             nn.init.xavier_uniform_(self.WOe.weight)
+        if self.full_graph:
+            nn.init.xavier_uniform_(self.WQ_2.weight)
+            nn.init.xavier_uniform_(self.WK_2.weight)
+            nn.init.xavier_uniform_(self.WO_2.weight)
 
     def forward(self, data):
         x = data.x
@@ -162,6 +183,28 @@ class GTConv(MessagePassing):
         out = self.propagate(
             edge_index, Q=Q, K=K, V=V, G=G, edge_attr=edge_attr, size=None
         )
+
+        if self.full_graph:
+            fake_edge_index = negate_edge_index(edge_index, data.batch)
+            Q_2 = self.WQ_2(x).view(-1, self.num_heads, self.hidden_dim // self.num_heads)
+            K_2 = self.WK_2(x).view(-1, self.num_heads, self.hidden_dim // self.num_heads)
+            # Dummy edge features for fake edges
+            if self.edge_in_dim is not None:
+                # One embedding used for all fake edges; shape: 1 x emb_dim
+                dummy_edge = self.fake_edge_emb(edge_index.new_zeros(1))
+                # Project edge features to hidden_dim (to match E in message)
+                # But wait, in Original GT, E is projected from edge_attr.
+                # Here we project the dummy_edge.
+                E_2 = self.WE_2(dummy_edge).view(-1, self.num_heads, self.hidden_dim // self.num_heads)
+            else:
+                E_2 = None
+
+            out_2 = self.propagate(
+                fake_edge_index, Q=Q_2, K=K_2, V=V, G=G, edge_attr=E_2, size=None
+            )
+            # Weighted average
+            out = out / (self.gamma + 1) + self.gamma * out_2 / (self.gamma + 1)
+
         out = out.view(-1, self.hidden_dim * self.num_aggrs)  # concatenation
 
         # NODES
@@ -199,6 +242,9 @@ class GTConv(MessagePassing):
         if self.edge_in_dim is not None:
             assert edge_attr is not None
             E = self.WE(edge_attr).view(-1, self.num_heads, self.hidden_dim // self.num_heads)
+            # If edge_attr is already projected (for fake edges), use it directly
+            if edge_attr.shape[0] != index.shape[0]: # This is a hack for broadcasted E_2
+                 E = edge_attr
             qijk = E * qijk
             self._eij = qijk
         else:

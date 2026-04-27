@@ -8,7 +8,7 @@ dataset:
   name: subset
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: TypeDictNode+GPSE
+  node_encoder_name: TypeDictNode+LapPE
   node_encoder_num_types: 21
   task: graph
   task_type: regression
@@ -27,6 +27,8 @@ gt:
   batch_norm: true
   dim_hidden: 64
   dropout: 0.0
+  full_graph: true
+  gamma: 1.0e-05
   layer_norm: false
   layer_type: origin_gt
   layers: 10
@@ -34,7 +36,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: zinc-OriginGT-GPSE
+  name: zinc-OriginGT-LapPE-Dense
   project: Exp
   use: false
 model:
@@ -52,18 +54,13 @@ optim:
   scheduler: cosine_with_warmup
   weight_decay: 1e-5
 out_dir: results
-posenc_GPSE:
-  dim_pe: 64
-  enable: true
-  model: Linear
-  raw_norm_type: none
 posenc_LapPE:
   dim_pe: 21
   eigen:
     eigvec_norm: L2
     laplacian_norm: none
     max_freqs: 10
-  enable: false
+  enable: true
   layers: 2
   model: DeepSet
   raw_norm_type: none
@@ -77,6 +74,6 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  name: ZINC-OriginGT-GPSE
+  name: ZINC-OriginGT-LapPE-Dense
   project: PEGT
   use: false

@@ -6,7 +6,7 @@ dataset:
   name: edge_wt_region_boundary
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: VOCNode+LapPE
+  node_encoder_name: VOCNode+RWSE
   slic_compactness: 30
   task: graph
   task_type: classification
@@ -25,13 +25,15 @@ gt:
   batch_norm: true
   dim_hidden: 64
   dropout: 0.0
+  full_graph: true
+  gamma: 1.0e-05
   layer_norm: false
   layer_type: origin_gt
   layers: 10
   n_heads: 8
 metric_best: f1
 mlflow:
-  name: voc-OriginGT-LapPE
+  name: voc-OriginGT-RWSE-Dense
 model:
   loss_fun: weighted_cross_entropy
   type: origin_gt
@@ -50,9 +52,36 @@ posenc_LapPE:
     eigvec_norm: L2
     laplacian_norm: none
     max_freqs: 10
-  enable: true
+  enable: false
   layers: 2
   model: DeepSet
+  raw_norm_type: none
+posenc_RWSE:
+  dim_pe: 16
+  enable: true
+  kernel:
+    times:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+  model: Linear
   raw_norm_type: none
 repeat: 1
 train:
@@ -61,4 +90,4 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  name: VOC-OriginGT-LapPE
+  name: VOC-OriginGT-RWSE-Dense

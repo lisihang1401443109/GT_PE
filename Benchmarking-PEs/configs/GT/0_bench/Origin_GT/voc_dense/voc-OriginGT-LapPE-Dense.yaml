@@ -25,13 +25,15 @@ gt:
   batch_norm: true
   dim_hidden: 64
   dropout: 0.0
+  full_graph: true
+  gamma: 1.0e-05
   layer_norm: false
   layer_type: origin_gt
   layers: 10
   n_heads: 8
 metric_best: f1
 mlflow:
-  name: voc-OriginGT-LapPE
+  name: voc-OriginGT-LapPE-Dense
 model:
   loss_fun: weighted_cross_entropy
   type: origin_gt
@@ -61,4 +63,4 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  name: VOC-OriginGT-LapPE
+  name: VOC-OriginGT-LapPE-Dense
