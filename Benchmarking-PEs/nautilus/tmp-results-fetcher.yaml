@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tmp-results-fetcher
+  namespace: gp-engine-malof
+spec:
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: sihang-test-pvc
+  containers:
+    - name: fetcher
+      image: busybox
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "--- ZINC Dense Results ---"
+          ls /mnt/pvc/GT_PE/Benchmarking-PEs/logs/verify_zinc_dense_*.log | xargs grep "Best so far"
+          echo "--- ZINC GAT Results ---"
+          ls /mnt/pvc/GT_PE/Benchmarking-PEs/logs/verify_zinc_gat_*.log | xargs grep "Best so far"
+          echo "--- Peptides Struct GAT Results ---"
+          ls /mnt/pvc/GT_PE/Benchmarking-PEs/logs/verify_peptides_struct_gat_*.log | xargs grep "Best so far"
+      volumeMounts:
+        - name: data
+          mountPath: "/mnt/pvc"
+  restartPolicy: Never

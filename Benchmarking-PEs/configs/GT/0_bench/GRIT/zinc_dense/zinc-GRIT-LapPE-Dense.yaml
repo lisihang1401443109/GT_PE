@@ -8,7 +8,7 @@ dataset:
   name: subset
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: TypeDictNode+RWSE
+  node_encoder_name: TypeDictNode+LapPE
   node_encoder_num_types: 21
   task: graph
   task_type: regression
@@ -66,12 +66,12 @@ out_dir: results
 posenc_GPSE:
   enable: false
 posenc_LapPE:
-  enable: false
+  enable: true
 posenc_RRWP:
   enable: false
 posenc_RWSE:
   dim_pe: 10
-  enable: true
+  enable: false
   kernel:
     times_func: range(1,21)
   model: Linear
@@ -86,6 +86,6 @@ train:
   mode: custom
 wandb:
   entity: jiaqing
-  name: ZINC-GRIT-RWSE-Dense
+  name: ZINC-GRIT-LapPE-Dense
   project: PEGT
   use: true

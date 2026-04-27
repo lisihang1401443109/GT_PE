@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: zinc-gpse-lr-sweep-6
+  namespace: gp-engine-malof
+spec:
+  parallelism: 6
+  completions: 6
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              apt-get update && apt-get install -y git
+              cd ~
+              rm -rf GT_PE
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+              # Matrix: [noPE, GPSE] x [1e-3, 5e-4, 1e-4]
+              MOD_INDEX=$(( $JOB_COMPLETION_INDEX % 3 ))
+              PE_TYPE=$(( $JOB_COMPLETION_INDEX / 3 ))
+
+              if [ $PE_TYPE -eq 0 ]; then
+                CFG="configs/GT/0_bench/GRIT/zinc/zinc-GRIT-noPE.yaml"
+                VAR="noPE"
+              else
+                CFG="configs/GT/0_bench/GRIT/zinc/zinc-GRIT-GPSE.yaml"
+                VAR="GPSE"
+              fi
+
+              case $MOD_INDEX in
+                0) LR="0.001" ;;
+                1) LR="0.0005" ;;
+                2) LR="0.0001" ;;
+              esac
+
+              WANDB_NAME="ZINC-${VAR}-LR${LR}"
+              LOG_FILE="/mnt/pvc/GT_PE/Benchmarking-PEs/logs/zinc_sweep_6_${JOB_COMPLETION_INDEX}.log"
+
+              python main.py --cfg $CFG optim.base_lr $LR \
+                wandb.name $WANDB_NAME wandb.project PEGT wandb.group ZINC-GPSE-LR-Sweep wandb.entity sihang-personal \
+                > "$LOG_FILE" 2>&1
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8" }
+            requests: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      restartPolicy: Never
+      tolerations:
+        - {
+            key: "nautilus.io/gp-engine-malof",
+            operator: "Exists",
+            effect: "NoSchedule",
+          }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
+  backoffLimit: 0

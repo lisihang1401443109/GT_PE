@@ -45,7 +45,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: zinc-GRIT-RRWP
+  name: zinc-GRIT-noPE
   project: Exp
   use: false
 model:
@@ -63,13 +63,19 @@ optim:
   scheduler: cosine_with_warmup
   weight_decay: 1e-5
 out_dir: results
-posenc_RRWP:
-  add_identity: true
-  add_inverse: false
-  add_node_attr: false
+posenc_GPSE:
   enable: false
-  ksteps: 21
-repeat: 4
+posenc_LapPE:
+  enable: false
+posenc_RRWP:
+  enable: false
+posenc_RWSE:
+  dim_pe: 10
+  enable: false
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  raw_norm_type: BatchNorm
 tensorboard_each_run: true
 train:
   batch_size: 128

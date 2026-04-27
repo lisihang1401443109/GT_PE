@@ -1,0 +1,70 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grit-sparse-peptides_struct
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  completionMode: Indexed
+  completions: 4
+  parallelism: 4
+  template:
+    spec:
+      containers:
+      - args:
+        - "set -e\napt-get update && apt-get install -y git\ncd ~\nrm -rf GT_PE\n\
+          git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git\
+          \ GT_PE\ncd GT_PE/Benchmarking-PEs\nbash setup_environment.sh\nsource /opt/conda/etc/profile.d/conda.sh\n\
+          conda activate GTPE\nmkdir -p datasets\nln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/*\
+          \ datasets/ || true\nln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained\
+          \ . || true\n\n# Partitioned Sparse peptides_struct\n\n              PES=(\"\
+          noPE\" \"LapPE\" \"RWSE\" \"GPSE\")\n              PE=${PES[$JOB_COMPLETION_INDEX]}\n\
+          \              DS=\"peptides_struct\"\n              CFG=\"configs/GT/0_bench/GRIT/${DS}_sparse/${DS}-GRIT-${PE}-Sparse.yaml\"\
+          \n    LOG_FILE=\"/mnt/pvc/GT_PE/Benchmarking-PEs/logs/grit_bench_${JOB_COMPLETION_INDEX}.log\"\
+          \n\npython main.py --cfg $CFG \\\n  wandb.group GRIT-Sparse-Dense-Final\
+          \ wandb.entity sihang-personal \\\n  > \"$LOG_FILE\" 2>&1\n"
+        command:
+        - /bin/bash
+        - -c
+        env:
+        - name: WANDB_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: WANDB_API_KEY
+              name: wandb-api-key
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: github-token
+        image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '8'
+            memory: 32Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '8'
+            memory: 32Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: data-volume
+        - mountPath: /dev/shm
+          name: dshm
+      restartPolicy: Never
+      tolerations:
+      - effect: NoSchedule
+        key: nautilus.io/gp-engine-malof
+        operator: Exists
+      - effect: PreferNoSchedule
+        key: nvidia.com/gpu
+        operator: Exists
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: sihang-test-pvc
+      - emptyDir:
+          medium: Memory
+        name: dshm

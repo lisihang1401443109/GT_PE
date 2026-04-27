@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpse-investigation-5
+  namespace: gp-engine-malof
+spec:
+  parallelism: 5
+  completions: 5
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              apt-get update && apt-get install -y git
+              cd ~
+              rm -rf GT_PE
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+
+              case $JOB_COMPLETION_INDEX in
+                0) CFG="configs/GT/0_bench/GRIT/zinc/zinc-GRIT-noPE.yaml"; ARGS="optim.base_lr 0.001 wandb.name ZINC-noPE-Base" ;;
+                1) CFG="configs/GT/0_bench/GRIT/zinc/zinc-GRIT-GPSE.yaml"; ARGS="optim.base_lr 0.001 wandb.name ZINC-GPSE-Base" ;;
+                2) CFG="configs/GT/0_bench/GRIT/zinc/zinc-GRIT-GPSE.yaml"; ARGS="optim.base_lr 0.0001 optim.num_warmup_epochs 50 wandb.name ZINC-GPSE-LowLR" ;;
+                3) CFG="configs/GT/0_bench/GRIT/LRGB/peptides_struct/peptides-struct-GRIT-noPE.yaml"; ARGS="optim.base_lr 0.0003 wandb.name Pept-noPE-Base" ;;
+                4) CFG="configs/GT/0_bench/GRIT/LRGB/peptides_struct/peptides-struct-GRIT-GPSE.yaml"; ARGS="optim.base_lr 0.0001 optim.num_warmup_epochs 20 wandb.name Pept-GPSE-LowLR" ;;
+              esac
+
+              LOG_FILE="/mnt/pvc/GT_PE/Benchmarking-PEs/logs/investigate_5_${JOB_COMPLETION_INDEX}.log"
+              python main.py --cfg $CFG $ARGS wandb.project PEGT wandb.group GPSE-Investigate-5 wandb.entity sihang-personal > $LOG_FILE 2>&1
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8" }
+            requests: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      restartPolicy: Never
+      tolerations:
+        - {
+            key: "nautilus.io/gp-engine-malof",
+            operator: "Exists",
+            effect: "NoSchedule",
+          }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
+  backoffLimit: 0
