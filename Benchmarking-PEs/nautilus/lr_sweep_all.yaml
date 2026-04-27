@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grit-lr-sweep-all
+  namespace: gp-engine-malof
+spec:
+  parallelism: 12
+  completions: 24
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              apt-get update && apt-get install -y git
+              cd ~
+              rm -rf GT_PE
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+              
+              # Map index to config
+              CONFIGS=(configs/GT/LR_sweep/zinc-noPE-LR0.001.yaml configs/GT/LR_sweep/zinc-noPE-LR0.0005.yaml configs/GT/LR_sweep/zinc-noPE-LR0.0001.yaml configs/GT/LR_sweep/zinc-GPSE-LR0.001.yaml configs/GT/LR_sweep/zinc-GPSE-LR0.0005.yaml configs/GT/LR_sweep/zinc-GPSE-LR0.0001.yaml configs/GT/LR_sweep/peptides-struct-noPE-LR0.0003.yaml configs/GT/LR_sweep/peptides-struct-noPE-LR0.0001.yaml configs/GT/LR_sweep/peptides-struct-noPE-LR5e-05.yaml configs/GT/LR_sweep/peptides-struct-GPSE-LR0.0003.yaml configs/GT/LR_sweep/peptides-struct-GPSE-LR0.0001.yaml configs/GT/LR_sweep/peptides-struct-GPSE-LR5e-05.yaml configs/GT/LR_sweep/peptides-func-noPE-LR0.0003.yaml configs/GT/LR_sweep/peptides-func-noPE-LR0.0001.yaml configs/GT/LR_sweep/peptides-func-noPE-LR5e-05.yaml configs/GT/LR_sweep/peptides-func-GPSE-LR0.0003.yaml configs/GT/LR_sweep/peptides-func-GPSE-LR0.0001.yaml configs/GT/LR_sweep/peptides-func-GPSE-LR5e-05.yaml configs/GT/LR_sweep/imdb-noPE-LR0.001.yaml configs/GT/LR_sweep/imdb-noPE-LR0.0003.yaml configs/GT/LR_sweep/imdb-noPE-LR0.0001.yaml configs/GT/LR_sweep/imdb-GPSE-LR0.001.yaml configs/GT/LR_sweep/imdb-GPSE-LR0.0003.yaml configs/GT/LR_sweep/imdb-GPSE-LR0.0001.yaml)
+              CFG=${CONFIGS[$JOB_COMPLETION_INDEX]}
+              LOG_FILE="/mnt/pvc/GT_PE/Benchmarking-PEs/results/LR_sweep/logs/${JOB_COMPLETION_INDEX}.log"
+              mkdir -p /mnt/pvc/GT_PE/Benchmarking-PEs/results/LR_sweep/logs/
+              
+              python main.py --cfg $CFG wandb.entity sihang-personal > $LOG_FILE 2>&1
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: {secretKeyRef: {name: wandb-api-key, key: WANDB_API_KEY}}
+            - name: GITHUB_TOKEN
+              valueFrom: {secretKeyRef: {name: github-token, key: token}}
+          resources:
+            limits: {nvidia.com/gpu: "1", memory: "32Gi", cpu: "8"}
+            requests: {nvidia.com/gpu: "1", memory: "32Gi", cpu: "8"}
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: {claimName: sihang-test-pvc}
+        - name: dshm
+          emptyDir: {medium: Memory}
+      restartPolicy: Never
+      tolerations:
+        - {key: "nautilus.io/gp-engine-malof", operator: "Exists", effect: "NoSchedule"}
+        - {key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule"}
+  backoffLimit: 0
