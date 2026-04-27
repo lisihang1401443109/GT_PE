@@ -7,7 +7,7 @@ dataset:
   name: peptides-functional
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: LinearNode+GPSE
+  node_encoder_name: Atom+GPSE
   task: graph
   task_type: classification_multilabel
   transductive: false
@@ -40,7 +40,7 @@ gt:
   sparse: true
 metric_best: ap
 mlflow:
-  name: peptides-func-GRIT-noPE
+  name: peptides-func-GRIT-GPSE
   project: Exp
   use: false
 model:
@@ -58,23 +58,40 @@ optim:
 out_dir: results
 pad_to_full_graph: true
 posenc_GPSE:
+  dim_pe: 32
   enable: true
-posenc_LapPE:
-  enable: false
-posenc_RRWP:
-  add_identity: true
-  add_node_attr: false
-  enable: false
-  ksteps: 17
-posenc_RWSE:
-  enable: false
+  gnn_cfg:
+    act: relu
+    agg: mean
+    batchnorm: true
+    dim_inner: 512
+    dropout: 0.2
+    head: inductive_hybrid_multi
+    layer_type: resgatedgcnconv
+    layers_mp: 20
+    layers_post_mp: 2
+    layers_pre_mp: 1
+    multi_head_dim_inner: 32
+    normalize_adj: false
+    stage_type: skipsum
+  input_dropout_ae: 0.0
+  input_dropout_be: 0.5
+  layers: 2
+  model: mlp
+  model_dir: pretrained/gpse_model_molpcba_1.0.pt
+  rand_type: NormalSE
+  raw_norm_type: BatchNorm
+  repr_type: no_post_mp
+  use_repr: true
+  virtual_node: true
 train:
   batch_size: 16
   ckpt_period: 100
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: PEPTIDES_FUNC-GRIT-GPSE-Sparse
   project: PEGT
   use: true

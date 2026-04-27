@@ -58,13 +58,35 @@ model:
 num_workers: 4
 out_dir: results
 posenc_GPSE:
+  dim_pe: 32
   enable: true
-posenc_LapPE:
-  enable: false
-posenc_RRWP:
-  enable: false
-posenc_RWSE:
-  enable: false
+  gnn_cfg:
+    act: relu
+    agg: mean
+    batchnorm: true
+    dim_inner: 512
+    dropout: 0.2
+    head: inductive_hybrid_multi
+    layer_type: resgatedgcnconv
+    layers_mp: 20
+    layers_post_mp: 2
+    layers_pre_mp: 1
+    multi_head_dim_inner: 32
+    normalize_adj: false
+    stage_type: skipsum
+  input_dropout_ae: 0.0
+  input_dropout_be: 0.5
+  layers: 2
+  loader:
+    batch_size: 1
+    type: neighbor
+  model: mlp
+  model_dir: pretrained/gpse_model_molpcba_1.0.pt
+  rand_type: NormalSE
+  raw_norm_type: BatchNorm
+  repr_type: no_post_mp
+  use_repr: true
+  virtual_node: true
 train:
   batch_size: 32
   ckpt_period: 100
@@ -72,6 +94,7 @@ train:
   mode: custom
 wandb:
   entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: IMDB-GRIT-GPSE-Sparse
   project: PEGT
   use: true

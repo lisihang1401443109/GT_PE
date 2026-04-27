@@ -7,7 +7,7 @@ dataset:
   name: peptides-functional
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: LinearNode
+  node_encoder_name: Atom
   task: graph
   task_type: classification_multilabel
   transductive: false
@@ -57,24 +57,19 @@ optim:
   weight_decay: 0.0
 out_dir: results
 pad_to_full_graph: true
-posenc_GPSE:
-  enable: false
-posenc_LapPE:
-  enable: false
 posenc_RRWP:
   add_identity: true
   add_node_attr: false
   enable: false
   ksteps: 17
-posenc_RWSE:
-  enable: false
 train:
   batch_size: 16
   ckpt_period: 100
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: PEPTIDES_FUNC-GRIT-noPE-Sparse
   project: PEGT
   use: true

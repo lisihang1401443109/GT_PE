@@ -57,14 +57,16 @@ model:
   type: GritTransformer
 num_workers: 4
 out_dir: results
-posenc_GPSE:
-  enable: false
 posenc_LapPE:
+  dim_pe: 16
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: none
+    max_freqs: 10
   enable: true
-posenc_RRWP:
-  enable: false
-posenc_RWSE:
-  enable: false
+  layers: 2
+  model: DeepSet
+  raw_norm_type: none
 train:
   batch_size: 32
   ckpt_period: 100
@@ -72,6 +74,7 @@ train:
   mode: custom
 wandb:
   entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: IMDB-GRIT-LapPE-Sparse
   project: PEGT
   use: true

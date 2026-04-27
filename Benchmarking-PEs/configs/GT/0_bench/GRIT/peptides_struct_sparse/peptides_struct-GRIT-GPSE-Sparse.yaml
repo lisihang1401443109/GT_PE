@@ -7,7 +7,7 @@ dataset:
   name: peptides-structural
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: LinearNode+GPSE
+  node_encoder_name: Atom+GPSE
   task: graph
   task_type: regression
   transductive: false
@@ -23,7 +23,7 @@ gt:
   attn:
     O_e: true
     act: relu
-    clamp: 5.0
+    clamp: 5
     edge_enhance: false
     full_attn: false
     norm_e: true
@@ -40,7 +40,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: peptides-struct-GRIT-noPE
+  name: peptides-struct-GRIT-GPSE
   project: Exp
   use: false
 model:
@@ -48,33 +48,49 @@ model:
   loss_fun: l1
   type: GritTransformer
 optim:
-  base_lr: 0.0003
+  base_lr: 0.0001
   clip_grad_norm: true
   max_epoch: 200
-  num_warmup_epochs: 10
+  num_warmup_epochs: 20
   optimizer: adamW
   scheduler: cosine_with_warmup
   weight_decay: 0.0
 out_dir: results
 posenc_GPSE:
+  dim_pe: 32
   enable: true
-posenc_LapPE:
-  enable: false
-posenc_RRWP:
-  add_identity: true
-  add_inverse: false
-  add_node_attr: false
-  enable: false
-  ksteps: 24
-posenc_RWSE:
-  enable: false
+  gnn_cfg:
+    act: relu
+    agg: mean
+    batchnorm: true
+    dim_inner: 512
+    dropout: 0.2
+    head: inductive_hybrid_multi
+    layer_type: resgatedgcnconv
+    layers_mp: 20
+    layers_post_mp: 2
+    layers_pre_mp: 1
+    multi_head_dim_inner: 32
+    normalize_adj: false
+    stage_type: skipsum
+  input_dropout_ae: 0.0
+  input_dropout_be: 0.5
+  layers: 2
+  model: mlp
+  model_dir: /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt
+  rand_type: NormalSE
+  raw_norm_type: BatchNorm
+  repr_type: no_post_mp
+  use_repr: true
+  virtual_node: true
 train:
   batch_size: 16
   ckpt_period: 100
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: PEPTIDES_STRUCT-GRIT-GPSE-Sparse
   project: PEGT
   use: true

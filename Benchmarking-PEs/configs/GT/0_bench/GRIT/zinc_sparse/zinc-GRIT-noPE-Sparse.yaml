@@ -63,12 +63,6 @@ optim:
   scheduler: cosine_with_warmup
   weight_decay: 1e-5
 out_dir: results
-posenc_GPSE:
-  enable: false
-posenc_LapPE:
-  enable: false
-posenc_RRWP:
-  enable: false
 posenc_RWSE:
   dim_pe: 10
   enable: false
@@ -85,7 +79,8 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: ZINC-GRIT-noPE-Sparse
   project: PEGT
   use: true

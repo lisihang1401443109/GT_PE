@@ -45,7 +45,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: zinc-GRIT-noPE
+  name: zinc-GRIT-LapPE
   project: Exp
   use: false
 model:
@@ -63,19 +63,17 @@ optim:
   scheduler: cosine_with_warmup
   weight_decay: 1e-5
 out_dir: results
-posenc_GPSE:
-  enable: false
 posenc_LapPE:
+  dim_pe: 21
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: none
+    max_freqs: 10
   enable: true
-posenc_RRWP:
-  enable: false
-posenc_RWSE:
-  dim_pe: 10
-  enable: false
-  kernel:
-    times_func: range(1,21)
-  model: Linear
-  raw_norm_type: BatchNorm
+  layers: 2
+  model: DeepSet
+  raw_norm_type: none
+repeat: 4
 tensorboard_each_run: true
 train:
   batch_size: 128
@@ -85,7 +83,8 @@ train:
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: ZINC-GRIT-LapPE-Sparse
   project: PEGT
   use: true

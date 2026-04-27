@@ -7,7 +7,7 @@ dataset:
   name: peptides-structural
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: LinearNode+RWSE
+  node_encoder_name: Atom+RWSE
   task: graph
   task_type: regression
   transductive: false
@@ -40,7 +40,7 @@ gt:
 metric_agg: argmin
 metric_best: mae
 mlflow:
-  name: peptides-struct-GRIT-noPE
+  name: peptides-struct-GRIT-RWSE
   project: Exp
   use: false
 model:
@@ -56,25 +56,21 @@ optim:
   scheduler: cosine_with_warmup
   weight_decay: 0.0
 out_dir: results
-posenc_GPSE:
-  enable: false
-posenc_LapPE:
-  enable: false
-posenc_RRWP:
-  add_identity: true
-  add_inverse: false
-  add_node_attr: false
-  enable: false
-  ksteps: 24
 posenc_RWSE:
+  dim_pe: 24
   enable: true
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  raw_norm_type: BatchNorm
 train:
   batch_size: 16
   ckpt_period: 100
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: PEPTIDES_STRUCT-GRIT-RWSE-Sparse
   project: PEGT
   use: true

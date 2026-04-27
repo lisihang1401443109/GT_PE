@@ -7,7 +7,7 @@ dataset:
   name: peptides-functional
   node_encoder: true
   node_encoder_bn: false
-  node_encoder_name: LinearNode+LapPE
+  node_encoder_name: Atom+LapPE
   task: graph
   task_type: classification_multilabel
   transductive: false
@@ -40,7 +40,7 @@ gt:
   sparse: true
 metric_best: ap
 mlflow:
-  name: peptides-func-GRIT-noPE
+  name: peptides-func-GRIT-LapPE
   project: Exp
   use: false
 model:
@@ -57,24 +57,24 @@ optim:
   weight_decay: 0.0
 out_dir: results
 pad_to_full_graph: true
-posenc_GPSE:
-  enable: false
 posenc_LapPE:
+  dim_pe: 17
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: none
+    max_freqs: 17
   enable: true
-posenc_RRWP:
-  add_identity: true
-  add_node_attr: false
-  enable: false
-  ksteps: 17
-posenc_RWSE:
-  enable: false
+  layers: 2
+  model: DeepSet
+  raw_norm_type: none
 train:
   batch_size: 16
   ckpt_period: 100
   eval_period: 1
   mode: custom
 wandb:
-  entity: jiaqing
+  entity: sihang-personal
+  group: GRIT-Sparse-Dense-Final
   name: PEPTIDES_FUNC-GRIT-LapPE-Sparse
   project: PEGT
   use: true

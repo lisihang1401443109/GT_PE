@@ -1,0 +1,110 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: zinc-sparse-multi-pe-verify
+  namespace: gp-engine-malof
+  labels:
+    app: grit-verify
+    target: zinc
+    type: sparse
+spec:
+  completions: 4
+  parallelism: 4
+  completionMode: Indexed
+  template:
+    metadata:
+      labels:
+        app: grit-verify
+        target: zinc
+        type: sparse
+    spec:
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              echo "--- Starting ZINC Sparse Multi-PE Verification Pod ---"
+
+              # Install git
+              apt-get update && apt-get install -y git
+
+              # Setup workspace in HOME
+              cd ~
+              rm -rf GT_PE
+
+              # Clone repo
+              echo "Cloning repository (branch: benchmark_pe_gpse)..."
+              git clone --branch benchmark_pe_gpse https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+
+              # Run dynamic setup script
+              echo "Running dynamic environment setup script..."
+              bash setup_environment.sh
+
+              # Initialize conda
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+
+              # Link datasets, pre-trained weights, and results
+              echo "Linking PVC data..."
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+              mkdir -p /mnt/pvc/GT_PE/Benchmarking-PEs/results
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results .
+
+              # Map index to PE and WandB name
+              if [ "$JOB_COMPLETION_INDEX" -eq 0 ]; then
+                PE="GPSE"
+              elif [ "$JOB_COMPLETION_INDEX" -eq 1 ]; then
+                PE="LapPE"
+              elif [ "$JOB_COMPLETION_INDEX" -eq 2 ]; then
+                PE="RWSE"
+              elif [ "$JOB_COMPLETION_INDEX" -eq 3 ]; then
+                PE="noPE"
+              fi
+              
+              CFG="configs/GT/0_bench/GRIT/zinc_sparse/zinc-GRIT-${PE}-Sparse.yaml"
+
+              WANDB_NAME="Verify-ZINC-Sparse-$PE"
+              # Match the verified dense script args
+              EXTRA_ARGS="wandb.entity sihang-personal wandb.use True wandb.name $WANDB_NAME train.batch_size 128"
+
+              if [ "$PE" == "GPSE" ]; then
+                # Use absolute path for model_dir as in verified script
+                EXTRA_ARGS="$EXTRA_ARGS posenc_GPSE.loader.batch_size 1 posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt"
+              fi
+
+              echo "Executing: $PE (Sparse) with WandB Name: $WANDB_NAME"
+
+              LOG_DIR="/mnt/pvc/GT_PE/Benchmarking-PEs/logs"
+              mkdir -p "$LOG_DIR"
+              LOG_FILE="$LOG_DIR/verify_zinc_sparse_${PE}.log"
+
+              python main.py --cfg "$CFG" --repeat 1 $EXTRA_ARGS > "$LOG_FILE" 2>&1
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8", ephemeral-storage: "100Gi" }
+            requests: { nvidia.com/gpu: "1", memory: "32Gi", cpu: "8", ephemeral-storage: "50Gi" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      restartPolicy: Never
+      tolerations:
+        - { key: "nautilus.io/gp-engine-malof", operator: "Exists", effect: "NoSchedule" }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }
+  backoffLimit: 0
