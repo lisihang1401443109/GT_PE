@@ -55,7 +55,7 @@ spec:
               ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
               ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
               mkdir -p /mnt/pvc/GT_PE/Benchmarking-PEs/results
-              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results .
+              rm -rf results && ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results .
 
               # Map index to PE and WandB name
               if [ "$JOB_COMPLETION_INDEX" -eq 0 ]; then

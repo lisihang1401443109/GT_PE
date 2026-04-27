@@ -55,7 +55,7 @@ spec:
               ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
               ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
               mkdir -p /mnt/pvc/GT_PE/Benchmarking-PEs/results
-              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results .
+              rm -rf results && ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results .
 
               # Purge stale processed data for IMDB to ensure relational encoding fix takes effect
               rm -rf datasets/IMDB/processed/
