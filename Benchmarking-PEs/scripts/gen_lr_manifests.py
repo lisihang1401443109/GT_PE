@@ -45,6 +45,10 @@ spec:
             echo "Cloning repository (branch: benchmark_pe_gpse)..."
             git clone --branch benchmark_pe_gpse https://${{GITHUB_TOKEN}}@github.com/lisihang1401443109/GT_PE.git GT_PE
             cd GT_PE/Benchmarking-PEs
+            
+            # Ensure absolute cleanliness
+            git clean -fd
+            git reset --hard origin/benchmark_pe_gpse
 
             # Run dynamic setup script
             echo "Running dynamic environment setup script..."
@@ -88,7 +92,8 @@ spec:
             mkdir -p "$LOG_DIR"
             LOG_FILE="$LOG_DIR/lr_sweep_zinc_grit_${{PE}}_{lr}.log"
             
-            python main.py --cfg "${{CONFIG}}" --repeat 1 wandb.use True wandb.name "${{WANDB_NAME}}" > "${{LOG_FILE}}" 2>&1
+            # Direct execution for observability
+            python main.py --cfg "${{CONFIG}}" --repeat 1 wandb.use True wandb.name "${{WANDB_NAME}}"
             
             echo "--- Completed ${{PE}} {lr} ---"
         env:
@@ -97,8 +102,8 @@ spec:
           - name: GITHUB_TOKEN
             valueFrom: {{ secretKeyRef: {{ name: github-token, key: token }} }}
         resources:
-          limits: {{ nvidia.com/gpu: "1", memory: "16Gi", cpu: "4", ephemeral-storage: "100Gi" }}
-          requests: {{ nvidia.com/gpu: "1", memory: "16Gi", cpu: "4", ephemeral-storage: "50Gi" }}
+          limits: {{ nvidia.com/gpu: "1", memory: "32Gi", cpu: "4", ephemeral-storage: "100Gi" }}
+          requests: {{ nvidia.com/gpu: "1", memory: "32Gi", cpu: "4", ephemeral-storage: "50Gi" }}
         volumeMounts:
           - name: data-volume
             mountPath: "/mnt/pvc"

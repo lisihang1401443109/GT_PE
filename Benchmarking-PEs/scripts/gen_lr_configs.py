@@ -49,7 +49,7 @@ template_base = {
         'layer_norm': False,
         'layer_type': 'GritTransformer',
         'layers': 10,
-        'n_heads:': 8,
+        'n_heads': 8,
         'sparse': True,
         'update_e': True
     },
@@ -64,7 +64,7 @@ template_base = {
     'optim': {
         'base_lr': 1e-3,
         'clip_grad_norm': True,
-        'max_epoch:': 700, # Reduced for sweep
+        'max_epoch': 700, # Reduced for sweep
         'min_lr': 1e-6,
         'num_warmup_epochs': 50,
         'optimizer': 'adamW',
@@ -76,7 +76,7 @@ template_base = {
         'batch_size': 128,
         'ckpt_best': True,
         'ckpt_clean': True,
-        'enable_ckpt:': True,
+        'enable_ckpt': True,
         'eval_period': 1,
         'mode': 'custom'
     },
@@ -135,7 +135,7 @@ for pe in pes:
         elif pe == 'LapPE':
             config_dict['posenc_LapPE'] = {'dim_pe': 8, 'eigen': {'eigvec_norm': 'L2', 'max_freqs': 8}, 'enable': True, 'layers': 3, 'model': 'DeepSet', 'post_layers': 0, 'raw_norm_type': 'none'}
         elif pe == 'RWSE':
-            config_dict['posenc_RWSE'] = {'dim_pe': 16, 'enable': True, 'kernel': {'times:': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}, 'layers:': 3, 'model:': 'Linear', 'raw_norm_type:': 'BatchNorm'}
+            config_dict['posenc_RWSE'] = {'dim_pe': 16, 'enable': True, 'kernel': {'times': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}, 'layers': 3, 'model': 'Linear', 'raw_norm_type': 'BatchNorm'}
 
         output_file = f'configs/GT/0_bench/ZINC_LR_Sweep/zinc-GRIT-{pe}-LR-{lr}.yaml'
         with open(output_file, 'w') as f:

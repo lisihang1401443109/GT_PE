@@ -39,7 +39,7 @@ gt:
   layer_norm: false
   layer_type: GritTransformer
   layers: 10
-  'n_heads:': 8
+  n_heads: 8
   sparse: true
   update_e: true
 metric_agg: argmin
@@ -52,7 +52,7 @@ model:
 optim:
   base_lr: 0.005
   clip_grad_norm: true
-  'max_epoch:': 700
+  max_epoch: 700
   min_lr: 1.0e-06
   num_warmup_epochs: 50
   optimizer: adamW
@@ -90,7 +90,7 @@ train:
   batch_size: 128
   ckpt_best: true
   ckpt_clean: true
-  'enable_ckpt:': true
+  enable_ckpt: true
   eval_period: 1
   mode: custom
 wandb:
