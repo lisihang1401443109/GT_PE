@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: peptides_struct-sparse-multi-pe-verify
+  name: peptides-struct-sparse-multi-pe-verify
   namespace: gp-engine-malof
   labels:
     app: grit-verify
