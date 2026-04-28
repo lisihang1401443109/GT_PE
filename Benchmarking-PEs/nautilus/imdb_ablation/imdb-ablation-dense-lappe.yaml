@@ -1,25 +1,26 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  labels:
-    app: imdb-ablation
   name: imdb-ablation-dense-lappe
   namespace: gp-engine-malof
+  labels:
+    app: imdb-ablation
 spec:
-  backoffLimit: 0
   template:
+    metadata:
+      labels:
+        app: imdb-ablation
     spec:
       containers:
-      - args:
-        - 'apt-get update && apt-get install -y git wget bzip2 ca-certificates &&
-          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
-          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
-          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
-          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
-          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
-          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
-          numpy pandas scikit-learn ogb performer-pytorch && # 1. git setup
+      - name: gpu-container
+        image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+        command:
+        - /bin/bash
+        - -c
+        args:
+        - '# 1. git setup
+
+          apt-get update && apt-get install -y git
 
           mkdir -p /root/GT_PE
 
@@ -31,15 +32,7 @@ spec:
 
           fi
 
-
-          # 2. env setup
-
-          source /opt/conda/etc/profile.d/conda.sh || true
-
-          conda activate GTPE || true
-
-
-          # 3. git sync
+          # 2. git sync
 
           cd /root/GT_PE/Benchmarking-PEs
 
@@ -47,37 +40,61 @@ spec:
 
           git reset --hard origin/fix/imdb-eval-mask
 
+          # 3. symlinks and GPSE cache
 
-          # 4. symlinks and GPSE cache
+          mkdir -p datasets
 
-          rm -rf datasets
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/
 
-          ln -s /mnt/pvc/GT_PE/Benchmarking-PEs/datasets datasets
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained .
 
+          # 4. RUN THE RIGHT COMMAND
 
-          # 5. RUN THE RIGHT COMMAND
+          mkdir -p results/imdb-Dense-LapPE/0/train/
+
+          source /opt/conda/etc/profile.d/conda.sh && conda activate GTPE
 
           python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Dense-LapPE.yaml
-          --repeat 1'
-        command:
-        - /bin/bash
-        - -c
-        image: nvidia/cuda:12.1.0-base-ubuntu22.04
-        name: gpu-container
+          --repeat 1 wandb.use True wandb.entity sihang-personal wandb.name IMDB-Ablation-Dense-LapPE-Final
+          posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt'
+        env:
+        - name: WANDB_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wandb-api-key
+              key: WANDB_API_KEY
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-token
+              key: token
         resources:
           limits:
-            cpu: '4'
-            memory: 16Gi
             nvidia.com/gpu: '1'
+            memory: 32Gi
+            cpu: '8'
           requests:
-            cpu: '2'
-            memory: 12Gi
             nvidia.com/gpu: '1'
+            memory: 32Gi
+            cpu: '8'
         volumeMounts:
-        - mountPath: /mnt/pvc
-          name: gt-pe-volume
+        - name: data-volume
+          mountPath: /mnt/pvc
+        - name: dshm
+          mountPath: /dev/shm
       restartPolicy: Never
       volumes:
-      - name: gt-pe-volume
+      - name: data-volume
         persistentVolumeClaim:
-          claimName: gt-pe-volume
+          claimName: sihang-test-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      tolerations:
+      - key: nautilus.io/gp-engine-malof
+        operator: Exists
+        effect: NoSchedule
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: PreferNoSchedule
+  backoffLimit: 0
