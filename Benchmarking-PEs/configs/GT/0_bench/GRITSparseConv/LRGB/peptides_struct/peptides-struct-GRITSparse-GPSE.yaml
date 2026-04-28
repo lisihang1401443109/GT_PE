@@ -26,7 +26,7 @@ dataset:
 posenc_GPSE:
   enable: true
   rand_type: NormalSE
-  model_dir: /itet-stor/jiaxie/net_scratch/pe4gt/pretrained/gpse_model_molpcba_1.0.pt
+  model_dir: /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt
   dim_pe: 32
   use_repr: true
   repr_type: no_post_mp
