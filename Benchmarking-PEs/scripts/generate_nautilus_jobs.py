@@ -40,16 +40,21 @@ def generate_nautilus_jobs():
             git fetch origin
             git reset --hard origin/fix/imdb-eval-mask
             
-            # 3. symlinks and GPSE cache
+            # 3. Setup Python Environment
+            # We use the base environment since it already has torch 2.3.0 + CUDA 12.1 correctly installed
+            # Install dependencies 
+            pip install torch-geometric==2.6.1 yacs==0.1.8 wandb==0.26.1 ogb==1.3.6 performer-pytorch==1.1.4 opt_einsum==3.4.0 attrdict pytorch-lightning
+            pip install pyg_lib==0.4.0+pt23cu121 torch_scatter==2.1.2+pt23cu121 torch_sparse==0.6.18+pt23cu121 torch_cluster==1.6.3+pt23cu121 torch_spline_conv==1.2.2+pt23cu121 -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
+
+            # 4. Setup Symlinks for Datasets, Pretrained Models, and Results
             mkdir -p datasets
             ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/
             ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained .
             rm -rf results
             ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results results
             
-            # 4. RUN THE RIGHT COMMAND
+            # 5. RUN THE RIGHT COMMAND
             mkdir -p results/imdb-{variant}-{pe}/0/train/
-            source /opt/conda/etc/profile.d/conda.sh && conda activate GTPE
             python main.py --cfg {config_path} --repeat 1 {cli_overrides}
             """
             
