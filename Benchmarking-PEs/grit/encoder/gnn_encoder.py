@@ -153,6 +153,9 @@ class GNNNodeEncoder(nn.Module):
         pos_enc = self.pe_encoder(pos_enc)  # (Num nodes) x dim_pe
         pos_enc = self.dropout_ae(pos_enc)
 
+        # Expand node features if needed
+        h = self.linear_x(batch.x) if self.expand_x else batch.x
+        
         # Concatenate final PEs to input embedding
         if h.shape[0] != pos_enc.shape[0]:
             import sys
