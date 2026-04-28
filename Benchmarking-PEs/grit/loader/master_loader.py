@@ -769,11 +769,9 @@ def precompute_gpse(cfg, dataset):
     # Load GPSE model and prepare bounded method to recover original configs
     gpse_model, _recover_orig_cfgs = load_pretrained_gpse(cfg)
 
-    # Temporarily replace the transformation
-    orig_dataset_transform = dataset.transform
+    # Temporarily remove transformation from dataset to avoid baking it in
     dataset.transform = None
-    if cfg.posenc_GPSE.virtual_node:
-        dataset.transform = VirtualNodePatchSingleton()
+    vn_transform = VirtualNodePatchSingleton() if cfg.posenc_GPSE.virtual_node else None
 
     # Remove split indices, to be recovered at the end of the precomputation
     tmp_store = {}
@@ -796,15 +794,18 @@ def precompute_gpse(cfg, dataset):
     pbar = trange(len(dataset), desc="Pre-computing GPSE")
     tic = time.perf_counter()
     for batch in loader:
+        # Apply virtual node transform only to the batch if needed
+        if vn_transform:
+            batch = vn_transform(batch)
+            
         batch_out, batch_ptr = gpse_process_batch(gpse_model, batch)
 
         batch_out = batch_out.to("cpu", non_blocking=True)
-        # Need to wait for batch_ptr to finish transfering so that start and
-        # end indices are ready to use
         batch_ptr = batch_ptr.to("cpu", non_blocking=False)
 
         for start, end in zip(batch_ptr[:-1], batch_ptr[1:]):
-            data = dataset.get(curr_idx)
+            # Get fresh data object from storage (WITHOUT any transforms applied)
+            data = dataset.get(curr_idx).clone()
             if cfg.posenc_GPSE.virtual_node:
                 end = end - 1
             data.pestat_GPSE = batch_out[start:end]
@@ -1109,13 +1110,29 @@ def preformat_OGB_Graph(dataset_dir, name):
     if is_subset:
         import numpy as np
         rng = np.random.RandomState(42)  # Deterministic seed
+        # Fixed subset size: 8000 train, 1000 val, 1000 test (~10,000 total)
+        subset_sizes = [8000, 1000, 1000]
         for i in range(3):
             split_idx = dataset.split_idxs[i].numpy()
             size = len(split_idx)
-            subset_size = max(1, int(size * 0.1))
+            subset_size = min(size, subset_sizes[i])
             shuffled = rng.permutation(split_idx)
             dataset.split_idxs[i] = torch.tensor(shuffled[:subset_size])
-        logging.info(f"[*] Subset activated: Using 10% of {name}")
+        
+        # Actually subset the dataset to avoid processing all 437K graphs in pre-transforms
+        all_subset_indices = torch.cat(dataset.split_idxs)
+        subset_data_list = [dataset.get(i).clone() for i in all_subset_indices]
+        dataset._indices = None
+        dataset._data_list = subset_data_list
+        dataset.data, dataset.slices = dataset.collate(subset_data_list)
+        
+        # Re-map split indices to the new subsetted dataset
+        new_train_idx = torch.arange(len(dataset.split_idxs[0]))
+        new_val_idx = torch.arange(len(dataset.split_idxs[0]), len(dataset.split_idxs[0]) + len(dataset.split_idxs[1]))
+        new_test_idx = torch.arange(len(dataset.split_idxs[0]) + len(dataset.split_idxs[1]), len(subset_data_list))
+        dataset.split_idxs = [new_train_idx, new_val_idx, new_test_idx]
+        
+        logging.info(f"[*] Subset activated: Using 10,000 graphs ({len(dataset)} total)")
 
     if name == 'ogbg-ppa':
         # ogbg-ppa doesn't have any node features, therefore add zeros but do
