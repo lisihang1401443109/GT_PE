@@ -47,17 +47,20 @@ for run in all_runs:
 
 print(f"Found {len(grouped)} runs for Peptides-Struct")
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+fig, axes = plt.subplots(3, 2, figsize=(14, 15), sharey=True)
 models = ["Sparse", "Dense", "GAT"]
 
 for i, model in enumerate(models):
-    ax = axes[i]
-    ax.set_title(f"GRIT {model}", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Epoch")
-    if i == 0:
-        ax.set_ylabel("Validation MAE (log scale)")
-    ax.set_yscale("log")
-    ax.grid(True, alpha=0.3)
+    ax_tr = axes[i, 0]
+    ax_vl = axes[i, 1]
+    
+    for ax, title_suffix in [(ax_tr, "Train"), (ax_vl, "Val")]:
+        ax.set_title(f"GRIT {model} — {title_suffix}", fontsize=14, fontweight="bold")
+        ax.set_xlabel("Epoch")
+        ax.set_yscale("log")
+        ax.grid(True, alpha=0.3)
+    
+    ax_tr.set_ylabel("MAE (log scale)")
     
     for pe, color in PE_COLORS.items():
         run = grouped.get((model, pe))
@@ -66,22 +69,32 @@ for i, model in enumerate(models):
         try:
             h = run.history(pandas=True)
             if h is not None and not h.empty:
-                col = None
+                # Train metric
+                tr_col = None
+                for cand in ["train/mae", "train_mae", "train/loss", "train_loss"]:
+                    if cand in h.columns:
+                        tr_col = cand
+                        break
+                if tr_col:
+                    ax_tr.plot(range(len(h)), h[tr_col], color=color, label=pe, linewidth=1.5)
+                
+                # Val metric
+                vl_col = None
                 for cand in ["val/mae", "val_mae"]:
                     if cand in h.columns:
-                        col = cand
+                        vl_col = cand
                         break
-                if col:
-                    ax.plot(range(len(h)), h[col], color=color, label=pe, linewidth=1.5)
+                if vl_col:
+                    ax_vl.plot(range(len(h)), h[vl_col], color=color, label=pe, linewidth=1.5)
         except Exception as e:
             print(f"Error plotting {model}-{pe}: {e}")
 
 # Global legend
 pe_handles = [mlines.Line2D([], [], color=c, linewidth=2, label=pe) for pe, c in PE_COLORS.items()]
 fig.legend(handles=pe_handles, loc="lower center", ncol=4, fontsize=12, 
-           bbox_to_anchor=(0.5, -0.05))
+           bbox_to_anchor=(0.5, -0.02))
 
-fig.suptitle("Peptides-Struct: Validation MAE Comparison across Architectures", fontsize=16, y=1.05)
+fig.suptitle("Peptides-Struct: Train vs Val MAE Comparison", fontsize=18, y=1.02)
 plt.tight_layout()
 
 out = "final_results/peptides_struct_comparison.png"
