@@ -680,6 +680,14 @@ def load_dataset_master(format, name, dataset_dir):
     if hasattr(dataset.data, 'pestat_GPSE'):
         sys.stderr.write(f"  [DEBUG]   dataset.data.pestat_GPSE.shape: {dataset.data.pestat_GPSE.shape}\n")
     sys.stderr.write(f"  [DEBUG]   dataset.transform: {dataset.transform}\n")
+    
+    # HARD BAN: If the transform is adding virtual nodes, kill it.
+    if dataset.transform is not None:
+        from grit.transform.transforms import VirtualNodePatchSingleton
+        if isinstance(dataset.transform, VirtualNodePatchSingleton):
+            sys.stderr.write(f"  [DEBUG] HARD BAN: Removing VirtualNode transform from dataset.\n")
+            dataset.transform = None
+            
     sys.stderr.flush()
 
     return dataset
