@@ -46,4 +46,21 @@ Several experiments, particularly at **LR 5e-3**, failed to complete or produce 
 3. **RWSE Registry Error**: A specialized `ValueError` regarding kernel times affected the RWSE 5e-3 run due to a subtle configuration parsing priority; I have launched a targeted retry to recapture this data point.
 
 ## Performance Visualizations
-...
+
+### Overall Training Curves
+![All Architectures](final_results/benchmark_wandb_curves.png)
+
+### Sparse GRIT Training Curves
+![Sparse GRIT (Linear)](final_results/benchmark_wandb_curves_sparse.png)
+![Sparse GRIT (Log Scale)](final_results/benchmark_wandb_curves_sparse_log.png)
+
+### Dense GRIT Training Curves
+![Dense GRIT (Linear)](final_results/benchmark_wandb_curves_dense.png)
+![Dense GRIT (Log Scale)](final_results/benchmark_wandb_curves_dense_log.png)
+
+### GAT-GPS Training Curves
+![GAT-GPS (Linear)](final_results/benchmark_wandb_curves_gat.png)
+![GAT-GPS (Log Scale)](final_results/benchmark_wandb_curves_gat_log.png)
+
+### Learning Rate Sweep (Sparse GRIT on ZINC)
+![LR Sweep Curves](final_results/lr_sweep_curves.png)
