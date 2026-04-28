@@ -759,6 +759,7 @@ def gpse_io(
 
 @torch.no_grad()
 def precompute_gpse(cfg, dataset):
+    print(f"  [DEBUG] Entering precompute_gpse for {cfg.dataset.name}")
     dataset_name = f"{cfg.dataset.format}-{cfg.dataset.name}"
     tag = cfg.posenc_GPSE.tag
     if cfg.posenc_GPSE.from_saved:
