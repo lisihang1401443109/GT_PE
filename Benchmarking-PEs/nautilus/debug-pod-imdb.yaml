@@ -21,7 +21,7 @@ spec:
           cd ~
           if [ ! -d "GT_PE" ]; then
             echo "Cloning repository..."
-            git clone --branch benchmark-imdb https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+            git clone --branch fix/imdb-eval-mask https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
           fi
 
           cd GT_PE/Benchmarking-PEs
@@ -31,6 +31,8 @@ spec:
           mkdir -p datasets
           ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
           ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+          rm -rf results
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results results || true
 
           echo "Debug environment ready. Source ~/venv/bin/activate to begin."
           echo "Alternatively, use: conda activate GTPE"
