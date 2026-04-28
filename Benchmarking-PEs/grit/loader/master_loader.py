@@ -769,6 +769,13 @@ def precompute_gpse(cfg, dataset):
     # Load GPSE model and prepare bounded method to recover original configs
     gpse_model, _recover_orig_cfgs = load_pretrained_gpse(cfg)
 
+    # NUCLEAR CLEANUP: Explicitly remove any existing pestat_GPSE from the internal storage
+    if hasattr(dataset.data, 'pestat_GPSE'):
+        print(f"  [DEBUG] Found existing pestat_GPSE (shape {dataset.data.pestat_GPSE.shape}). Deleting to ensure clean start.")
+        del dataset.data.pestat_GPSE
+        if dataset.slices and 'pestat_GPSE' in dataset.slices:
+            del dataset.slices['pestat_GPSE']
+
     # Temporarily remove transformation from dataset to avoid baking it in
     orig_dataset_transform = dataset.transform
     dataset.transform = None
@@ -835,8 +842,8 @@ def precompute_gpse(cfg, dataset):
     dataset._data_list = data_list
     dataset.data, dataset.slices = dataset.collate(data_list)
     
-    logging.info(f"  [DEBUG] Precompute finished. Total nodes in dataset.data.x: {dataset.data.x.shape[0]}")
-    logging.info(f"  [DEBUG] Total nodes in dataset.data.pestat_GPSE: {dataset.data.pestat_GPSE.shape[0]}")
+    print(f"  [DEBUG] Precompute finished. Total nodes in dataset.data.x: {dataset.data.x.shape[0]}")
+    print(f"  [DEBUG] Total nodes in dataset.data.pestat_GPSE: {dataset.data.pestat_GPSE.shape[0]}")
 
     # Recover split indices
     for name, (tmp_store_data, tmp_store_slices) in tmp_store.items():
