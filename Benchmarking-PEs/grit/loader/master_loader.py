@@ -674,22 +674,6 @@ def load_dataset_master(format, name, dataset_dir):
     if cfg.posenc_GPSE.enable:
         precompute_gpse(cfg, dataset)
         
-    import sys
-    sys.stderr.write(f"  [DEBUG] Final dataset state in load_dataset_master:\n")
-    sys.stderr.write(f"  [DEBUG]   dataset.data.x.shape: {dataset.data.x.shape}\n")
-    if hasattr(dataset.data, 'pestat_GPSE'):
-        sys.stderr.write(f"  [DEBUG]   dataset.data.pestat_GPSE.shape: {dataset.data.pestat_GPSE.shape}\n")
-    sys.stderr.write(f"  [DEBUG]   dataset.transform: {dataset.transform}\n")
-    
-    # HARD BAN: If the transform is adding virtual nodes, kill it.
-    if dataset.transform is not None:
-        from grit.transform.transforms import VirtualNodePatchSingleton
-        if isinstance(dataset.transform, VirtualNodePatchSingleton):
-            sys.stderr.write(f"  [DEBUG] HARD BAN: Removing VirtualNode transform from dataset.\n")
-            dataset.transform = None
-            
-    sys.stderr.flush()
-
     return dataset
 
 
@@ -835,15 +819,15 @@ def precompute_gpse(cfg, dataset):
             
             # NUCLEAR FIX: Ensure x and pestat_GPSE have the same number of nodes
             if cfg.posenc_GPSE.virtual_node:
-                g_num_nodes = (end - start) - 1 # This is the original N
+                g_num_nodes = (end - start) - 1
                 if data.x.shape[0] > g_num_nodes:
                     data.x = data.x[:g_num_nodes]
+                    data.num_nodes = g_num_nodes
                     if hasattr(data, 'edge_index'):
                         mask = (data.edge_index[0] < g_num_nodes) & (data.edge_index[1] < g_num_nodes)
                         data.edge_index = data.edge_index[:, mask]
                         if hasattr(data, 'edge_attr') and data.edge_attr is not None:
                             data.edge_attr = data.edge_attr[mask]
-                
                 data.pestat_GPSE = batch_out[start:start+g_num_nodes]
             else:
                 data.pestat_GPSE = batch_out[start:end]
