@@ -1097,9 +1097,25 @@ def preformat_OGB_Graph(dataset_dir, name):
     Returns:
         PyG dataset object
     """
+    is_subset = False
+    if name.endswith('-subset'):
+        is_subset = True
+        name = name.replace('-subset', '')
+
     dataset = PygGraphPropPredDataset(name=name, root=dataset_dir)
     s_dict = dataset.get_idx_split()
     dataset.split_idxs = [s_dict[s] for s in ['train', 'valid', 'test']]
+
+    if is_subset:
+        import numpy as np
+        rng = np.random.RandomState(42)  # Deterministic seed
+        for i in range(3):
+            split_idx = dataset.split_idxs[i].numpy()
+            size = len(split_idx)
+            subset_size = max(1, int(size * 0.1))
+            shuffled = rng.permutation(split_idx)
+            dataset.split_idxs[i] = torch.tensor(shuffled[:subset_size])
+        logging.info(f"[*] Subset activated: Using 10% of {name}")
 
     if name == 'ogbg-ppa':
         # ogbg-ppa doesn't have any node features, therefore add zeros but do
