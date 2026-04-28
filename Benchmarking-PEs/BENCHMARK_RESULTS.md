@@ -28,22 +28,6 @@ This document summarizes the results of a comprehensive benchmarking suite compa
 | | | RWSE | 0.6456 | 0.6012 | 0.4998 |
 | | | GPSE | 0.6321 | **0.6401** | **0.5835** |
 
-## ZINC LR Sensitivity (Sparse GRIT)
-
-| PE Variant | LR 1e-4 | LR 1e-3 | LR 5e-3 |
-| :--- | :--- | :--- | :--- |
-| **noPE** | 0.3148 | **0.1639** | 0.5059 (X) |
-| **LapPE** | 0.2432 | **0.1236** | 0.4501 (X) |
-| **RWSE** | 0.2619 | **0.0871** | N/A |
-| **GPSE** | 0.2241 | **0.0675** | 0.4774 (X) |
-
-*(X) Indicates late-stage instability or premature failure. All 1e-3 metrics are from verified Phase 2 baselines.*
-
-### Analysis of Premature Failures
-Several experiments, particularly at **LR 5e-3**, failed to complete or produce optimal results due to:
-1. **Numerical Instability**: At 5e-3, the Sparse GRIT architecture (without dense global attention) is prone to gradient explosions. High attention weights on sparse edges can lead to large updates that disrupt the learnable gamma parameters, causing the model to diverge before convergence.
-2. **Configuration Overlap**: Early failures were traced to a `wandb.group` parameter mismatch that has since been corrected.
-3. **RWSE Registry Error**: A specialized `ValueError` regarding kernel times affected the RWSE 5e-3 run due to a subtle configuration parsing priority; I have launched a targeted retry to recapture this data point.
 
 ## Performance Visualizations
 
@@ -62,5 +46,3 @@ Several experiments, particularly at **LR 5e-3**, failed to complete or produce 
 ![GAT-GPS (Linear)](final_results/benchmark_wandb_curves_gat.png)
 ![GAT-GPS (Log Scale)](final_results/benchmark_wandb_curves_gat_log.png)
 
-### Learning Rate Sweep (Sparse GRIT on ZINC)
-![LR Sweep Curves](final_results/lr_sweep_curves.png)
