@@ -812,7 +812,6 @@ def precompute_gpse(cfg, dataset):
             if cfg.posenc_GPSE.virtual_node:
                 g_num_nodes = (end - start) - 1 # This is the original N
                 if data.x.shape[0] > g_num_nodes:
-                    print(f"  [DEBUG] Stripping virtual node from graph {curr_idx}: {data.x.shape[0]} -> {g_num_nodes}")
                     data.x = data.x[:g_num_nodes]
                     if hasattr(data, 'edge_index'):
                         mask = (data.edge_index[0] < g_num_nodes) & (data.edge_index[1] < g_num_nodes)
@@ -836,8 +835,8 @@ def precompute_gpse(cfg, dataset):
     dataset._data_list = data_list
     dataset.data, dataset.slices = dataset.collate(data_list)
     
-    print(f"  [DEBUG] Precompute finished. Total nodes in dataset.data.x: {dataset.data.x.shape[0]}")
-    print(f"  [DEBUG] Total nodes in dataset.data.pestat_GPSE: {dataset.data.pestat_GPSE.shape[0]}")
+    logging.info(f"  [DEBUG] Precompute finished. Total nodes in dataset.data.x: {dataset.data.x.shape[0]}")
+    logging.info(f"  [DEBUG] Total nodes in dataset.data.pestat_GPSE: {dataset.data.pestat_GPSE.shape[0]}")
 
     # Recover split indices
     for name, (tmp_store_data, tmp_store_slices) in tmp_store.items():
