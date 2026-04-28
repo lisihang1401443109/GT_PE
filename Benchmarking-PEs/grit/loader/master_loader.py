@@ -807,9 +807,28 @@ def precompute_gpse(cfg, dataset):
         for start, end in zip(batch_ptr[:-1], batch_ptr[1:]):
             # Get fresh data object from storage (WITHOUT any transforms applied)
             data = dataset.get(curr_idx).clone()
+            
+            # NUCLEAR FIX: Ensure x and pestat_GPSE have the same number of nodes
+            # If the GPSE output was stripped (N nodes), but data.x still has N+1 nodes,
+            # we must strip data.x as well.
             if cfg.posenc_GPSE.virtual_node:
-                end = end - 1
-            data.pestat_GPSE = batch_out[start:end]
+                # The model forward pass was done with N+1 nodes.
+                # batch_ptr[i+1] - batch_ptr[i] is N+1.
+                g_num_nodes = (end - start) - 1 # This is the original N
+                if data.x.shape[0] > g_num_nodes:
+                    data.x = data.x[:g_num_nodes]
+                    # Also fix edge_index if it was modified to include the virtual node
+                    if hasattr(data, 'edge_index'):
+                        mask = (data.edge_index[0] < g_num_nodes) & (data.edge_index[1] < g_num_nodes)
+                        data.edge_index = data.edge_index[:, mask]
+                        if hasattr(data, 'edge_attr') and data.edge_attr is not None:
+                            data.edge_attr = data.edge_attr[mask]
+                
+                # Now store the N encodings
+                data.pestat_GPSE = batch_out[start:start+g_num_nodes]
+            else:
+                data.pestat_GPSE = batch_out[start:end]
+                
             data_list.append(data)
             curr_idx += 1
 
