@@ -11,6 +11,10 @@ from .pooling import * # noqa
 from .stage import * # noqa
 from .train import * # noqa
 from .transform import * # noqa
+import torch_geometric.graphgym.register as register
+if 'default' not in register.head_dict:
+    if 'inductive_node' in register.head_dict:
+        register.head_dict['default'] = register.head_dict['inductive_node']
 
 # Register GraphGym modules
 from torch_geometric.graphgym.register import (register_loader,

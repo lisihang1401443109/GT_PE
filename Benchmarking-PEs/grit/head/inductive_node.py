@@ -5,6 +5,7 @@ from torch_geometric.graphgym.register import register_head
 
 
 @register_head('inductive_node')
+@register_head('default')
 class GNNInductiveNodeHead(nn.Module):
     """
     GNN prediction head for inductive node prediction tasks.
