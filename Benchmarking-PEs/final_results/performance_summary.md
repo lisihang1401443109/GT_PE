@@ -24,6 +24,10 @@ This summary provides a consolidated view of our benchmarking efforts across ZIN
 ![ZINC Sparse](benchmark_wandb_curves_sparse_log.png)
 *Sparse GRIT demonstrates dramatic MAE reduction when switching from noPE/LapPE to GPSE.*
 
+### Peptides-Struct Comparison
+![Peptides Struct](peptides_struct_comparison.png)
+*Comparison of Validation MAE across Sparse, Dense, and GAT architectures for the Peptides-Struct dataset.*
+
 ## 3. Findings & Conclusions
 - **GAT + GPSE Synergy**: The combination of sparse attention and global structural encoding (GPSE) is highly effective for the heterogeneous IMDB graph.
 - **Evaluation Integrity**: The transition to the masked IMDB protocol ensures our findings are not inflated by label leakage, providing a true measure of structural learning.
