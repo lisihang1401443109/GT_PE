@@ -49,17 +49,6 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
     optimizer.zero_grad()
     time_start = time.time()
     for iter, batch in enumerate(loader):
-        if iter == 0:
-            import sys
-            sys.stderr.write(f"\n[DEBUG] FIRST TRAINING BATCH INSPECTION:\n")
-            sys.stderr.write(f"  batch.num_graphs: {batch.num_graphs}\n")
-            sys.stderr.write(f"  batch.x.shape: {batch.x.shape}\n")
-            if hasattr(batch, 'pestat_GPSE'):
-                sys.stderr.write(f"  batch.pestat_GPSE.shape: {batch.pestat_GPSE.shape}\n")
-            sys.stderr.write(f"  batch.edge_index.max: {batch.edge_index.max().item()}\n")
-            sys.stderr.write(f"  batch.edge_index.shape: {batch.edge_index.shape}\n")
-            sys.stderr.flush()
-            
         # ipdb.set_trace()
         batch.split = 'train'
         batch.to(torch.device(cfg.device))
@@ -102,18 +91,7 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
 def eval_epoch(logger, loader, model, split='val'):
     model.eval()
     time_start = time.time()
-    for iter, batch in enumerate(loader):
-        if iter == 0:
-            import sys
-            sys.stderr.write(f"\n[DEBUG] FIRST EVAL BATCH INSPECTION ({split}):\n")
-            sys.stderr.write(f"  batch.num_graphs: {batch.num_graphs}\n")
-            sys.stderr.write(f"  batch.x.shape: {batch.x.shape}\n")
-            if hasattr(batch, 'pestat_GPSE'):
-                sys.stderr.write(f"  batch.pestat_GPSE.shape: {batch.pestat_GPSE.shape}\n")
-            sys.stderr.write(f"  batch.edge_index.max: {batch.edge_index.max().item()}\n")
-            sys.stderr.write(f"  batch.edge_index.shape: {batch.edge_index.shape}\n")
-            sys.stderr.flush()
-            
+    for batch in loader:
         batch.split = split
         batch.to(torch.device(cfg.device))
         if cfg.gnn.head == 'inductive_edge':
