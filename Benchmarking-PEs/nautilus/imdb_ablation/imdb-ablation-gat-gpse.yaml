@@ -6,11 +6,13 @@ metadata:
   labels:
     app: imdb-ablation
 spec:
+  backoffLimit: 0
   template:
     metadata:
       labels:
         app: imdb-ablation
     spec:
+      restartPolicy: Never
       containers:
       - name: gpu-container
         image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
@@ -18,60 +20,21 @@ spec:
         - /bin/bash
         - -c
         args:
-        - '# 1. git setup
-
-          apt-get update && apt-get install -y git
-
-          cd /root
-
-          if [ ! -d "GT_PE" ]; then
-
-          git clone https://github.com/lisihang1401443109/GT_PE.git
-
-          fi
-
-          cd GT_PE/Benchmarking-PEs
-
-          # 2. git sync
-
-          cd /root/GT_PE/Benchmarking-PEs
-
-          git fetch origin
-
-          git reset --hard origin/fix/imdb-eval-mask
-
-          # 3. Setup Python Environment
-
-          # We use the base environment since it already has torch 2.3.0 + CUDA 12.1
-          correctly installed
-
-          # Install dependencies
-
-          pip install torch-geometric==2.6.1 yacs==0.1.8 wandb==0.26.1 ogb==1.3.6
-          performer-pytorch==1.1.4 opt_einsum==3.4.0 attrdict pytorch-lightning
-
-          pip install pyg_lib==0.4.0+pt23cu121 torch_scatter==2.1.2+pt23cu121 torch_sparse==0.6.18+pt23cu121
-          torch_cluster==1.6.3+pt23cu121 torch_spline_conv==1.2.2+pt23cu121 -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
-
-          # 4. Setup Symlinks for Datasets, Pretrained Models, and Results
-
-          mkdir -p datasets
-
-          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/
-
-          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained .
-
-          rm -rf results
-
-          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results results
-
-          # 5. RUN THE RIGHT COMMAND
-
-          mkdir -p results/imdb-GAT-GPSE/0/train/
-
-          python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-GAT-GPSE.yaml
-          --repeat 1 wandb.use True wandb.entity sihang-personal wandb.name IMDB-Ablation-GAT-GPSE-Final
-          posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt'
+        - "set -e\napt-get update && apt-get install -y git\n\n# 1. Clone repo\ncd\
+          \ ~\nif [ ! -d \"GT_PE\" ]; then\n  git clone --branch fix/imdb-eval-mask\
+          \ https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE\n\
+          fi\ncd ~/GT_PE/Benchmarking-PEs\n\n# 2. Environment setup (creates GTPE\
+          \ conda env)\nbash setup_environment.sh\n\n# 3. Symlink PVC assets\nmkdir\
+          \ -p datasets\nln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/\
+          \ || true\nln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true\n\
+          rm -rf results\nln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results results\
+          \ || true\n\n# 4. Pre-create result directory\nmkdir -p results/imdb-GAT-GPSE/0/train/\n\
+          \n# 5. Run using the GTPE conda env python directly (avoids conda activate\
+          \ issues in non-interactive shells)\n/opt/conda/envs/GTPE/bin/python main.py\
+          \ \\\n  --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-GAT-GPSE.yaml \\\
+          \n  --repeat 1 \\\n  wandb.use True \\\n  wandb.entity sihang-personal \\\
+          \n  wandb.name IMDB-Ablation-GAT-GPSE-Final \\\n  posenc_GPSE.model_dir\
+          \ pretrained/gpse_model_molpcba_1.0.pt\n"
         env:
         - name: WANDB_API_KEY
           valueFrom:
@@ -97,7 +60,6 @@ spec:
           mountPath: /mnt/pvc
         - name: dshm
           mountPath: /dev/shm
-      restartPolicy: Never
       volumes:
       - name: data-volume
         persistentVolumeClaim:
@@ -112,4 +74,3 @@ spec:
       - key: nvidia.com/gpu
         operator: Exists
         effect: PreferNoSchedule
-  backoffLimit: 0
