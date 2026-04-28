@@ -36,13 +36,9 @@ This document summarizes the results of a comprehensive benchmarking suite compa
 
 ### Sparse GRIT Training Curves
 ![Sparse GRIT (Linear)](final_results/benchmark_wandb_curves_sparse.png)
-![Sparse GRIT (Log Scale)](final_results/benchmark_wandb_curves_sparse_log.png)
 
 ### Dense GRIT Training Curves
 ![Dense GRIT (Linear)](final_results/benchmark_wandb_curves_dense.png)
-![Dense GRIT (Log Scale)](final_results/benchmark_wandb_curves_dense_log.png)
 
 ### GAT-GPS Training Curves
 ![GAT-GPS (Linear)](final_results/benchmark_wandb_curves_gat.png)
-![GAT-GPS (Log Scale)](final_results/benchmark_wandb_curves_gat_log.png)
-
