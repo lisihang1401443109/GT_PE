@@ -1,10 +1,12 @@
 import yaml
+import os
 
 def generate_nautilus_jobs():
     pes = ["GPSE", "LapPE", "RWSE", "noPE"]
     variants = ["Sparse", "Dense", "GAT"]
     
-    jobs = []
+    out_dir = "nautilus/imdb_ablation"
+    os.makedirs(out_dir, exist_ok=True)
     
     for variant in variants:
         for pe in pes:
@@ -100,11 +102,10 @@ def generate_nautilus_jobs():
                     "backoffLimit": 0
                 }
             }
-            jobs.append(job)
             
-    with open("nautilus/imdb_ablation_jobs.yaml", "w") as f:
-        yaml.dump_all(jobs, f)
-    print("Generated nautilus/imdb_ablation_jobs.yaml")
+            with open(f"{out_dir}/{job_name}.yaml", "w") as f:
+                yaml.dump(job, f)
+            print(f"Generated {out_dir}/{job_name}.yaml")
 
 if __name__ == "__main__":
     generate_nautilus_jobs()
