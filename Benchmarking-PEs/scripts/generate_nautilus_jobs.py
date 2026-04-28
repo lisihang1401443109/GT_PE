@@ -44,6 +44,8 @@ def generate_nautilus_jobs():
             mkdir -p datasets
             ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/
             ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained .
+            rm -rf results
+            ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results results
             
             # 4. RUN THE RIGHT COMMAND
             mkdir -p results/imdb-{variant}-{pe}/0/train/

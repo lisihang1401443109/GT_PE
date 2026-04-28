@@ -48,6 +48,10 @@ spec:
 
           ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained .
 
+          rm -rf results
+
+          ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/results results
+
           # 4. RUN THE RIGHT COMMAND
 
           mkdir -p results/imdb-GAT-LapPE/0/train/
