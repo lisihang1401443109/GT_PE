@@ -16,7 +16,7 @@ gnn:
   batchnorm: true
   dim_inner: 128
   dropout: 0.0
-  head: default
+  head: graph
   layers_post_mp: 1
   layers_pre_mp: 0
   normalize_adj: false
