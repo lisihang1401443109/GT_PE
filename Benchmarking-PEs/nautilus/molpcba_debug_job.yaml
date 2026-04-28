@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: molpcba-debug-job
+  namespace: gp-engine-malof
+spec:
+  template:
+    metadata:
+      labels:
+        app: molpcba-debug
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: gpu-container
+          image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              set -e
+              apt-get update && apt-get install -y git
+              cd ~
+              echo "Cloning repository (branch: benchmark_molpcba)..."
+              git clone --branch benchmark_molpcba https://${GITHUB_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE
+              cd GT_PE/Benchmarking-PEs
+              bash setup_environment.sh
+              source /opt/conda/etc/profile.d/conda.sh
+              conda activate GTPE
+              mkdir -p datasets
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true
+              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true
+              echo "=== Environment ready. Pod is alive for debugging ==="
+              sleep infinity
+          env:
+            - name: WANDB_API_KEY
+              valueFrom: { secretKeyRef: { name: wandb-api-key, key: WANDB_API_KEY } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: github-token, key: token } }
+          resources:
+            limits: { nvidia.com/gpu: "1", memory: "128Gi", cpu: "16", ephemeral-storage: "100Gi" }
+            requests: { nvidia.com/gpu: "1", memory: "128Gi", cpu: "16", ephemeral-storage: "50Gi" }
+          volumeMounts:
+            - name: data-volume
+              mountPath: "/mnt/pvc"
+            - name: dshm
+              mountPath: "/dev/shm"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: { claimName: sihang-test-pvc }
+        - name: dshm
+          emptyDir: { medium: Memory }
+      tolerations:
+        - { key: "nautilus.io/gp-engine-malof", operator: "Exists", effect: "NoSchedule" }
+        - { key: "nvidia.com/gpu", operator: "Exists", effect: "PreferNoSchedule" }

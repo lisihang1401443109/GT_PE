@@ -1,0 +1,97 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: grit-benchmarking-molpcba
+    arch: sparse
+  name: grit-molpcba-sparse-sweep
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  completionMode: Indexed
+  completions: 4
+  parallelism: 4
+  template:
+    metadata:
+      labels:
+        app: grit-benchmarking-molpcba
+        arch: sparse
+    spec:
+      containers:
+      - args:
+        - "\n              set -e\n              echo \"--- Starting Sweep Pod (Automated\
+          \ Git Setup) ---\"\n              \n              # Install git\n      \
+          \        apt-get update && apt-get install -y git\n              \n    \
+          \          # Setup workspace in HOME\n              cd ~\n             \
+          \ rm -rf GT_PE\n              \n              echo \"Cloning repository\
+          \ (branch: benchmark_molpcba)...\"\n              git clone --branch benchmark_molpcba\
+          \ https://\\${GIT_TOKEN}@github.com/lisihang1401443109/GT_PE.git GT_PE\n\
+          \              cd GT_PE/Benchmarking-PEs\n              \n             \
+          \ echo \"Running dynamic environment setup script...\"\n              bash\
+          \ setup_environment.sh\n              \n              source /opt/conda/etc/profile.d/conda.sh\n\
+          \              conda activate GTPE\n              \n              echo \"\
+          Linking data from PVC...\"\n              mkdir -p datasets\n          \
+          \    ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/datasets/* datasets/ || true\n\
+          \              ln -snf /mnt/pvc/GT_PE/Benchmarking-PEs/pretrained . || true\n\
+          \              \n              # Map JOB_COMPLETION_INDEX to PE config\n\
+          \              PES=(\"noPE\" \"LapPE\" \"RWSE\" \"GPSE\")\n            \
+          \  PE=${PES[$JOB_COMPLETION_INDEX]}\n              \n              CFG=\"\
+          configs/GT/0_bench/GRIT/molpcba_sparse/molpcba-GRIT-${PE}-Sparse.yaml\"\n\
+          \              EXTRA_ARGS=\"wandb.name Sweep-MolPCBA-${PE}-Sparse\"\n  \
+          \            \n              # We use subset for MolPCBA\n             \
+          \ EXTRA_ARGS=\"$EXTRA_ARGS dataset.name ogbg-molpcba-subset wandb.entity\
+          \ sihang-personal wandb.use True\"\n              \n              if [ \"\
+          $PE\" == \"GPSE\" ]; then\n                EXTRA_ARGS=\"$EXTRA_ARGS posenc_GPSE.loader.batch_size\
+          \ 1 posenc_GPSE.model_dir /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt\"\
+          \n              fi\n              \n              echo \"Running benchmark\
+          \ with $PE on architecture sparse ($CFG)...\"\n              export PYTHONUNBUFFERED=1\n\
+          \              \n              LOG_DIR=\"/mnt/pvc/GT_PE/Benchmarking-PEs/logs_molpcba\"\
+          \n              mkdir -p \"$LOG_DIR\"\n              LOG_FILE=\"$LOG_DIR/grit-molpcba-sparse-sweep_${PE}.log\"\
+          \n              \n              python main.py --cfg \"$CFG\" --repeat 1\
+          \ $EXTRA_ARGS > \"$LOG_FILE\" 2>&1\n                            "
+        command:
+        - /bin/bash
+        - -c
+        env:
+        - name: WANDB_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: WANDB_API_KEY
+              name: wandb-api-key
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: github-token
+        image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+        imagePullPolicy: IfNotPresent
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '16'
+            memory: 64Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '16'
+            memory: 64Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: data-volume
+        - mountPath: /dev/shm
+          name: dshm
+      restartPolicy: Never
+      tolerations:
+      - effect: NoSchedule
+        key: nautilus.io/gp-engine-malof
+        operator: Exists
+      - effect: PreferNoSchedule
+        key: nvidia.com/gpu
+        operator: Exists
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: sihang-test-pvc
+      - emptyDir:
+          medium: Memory
+        name: dshm
