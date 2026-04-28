@@ -770,6 +770,7 @@ def precompute_gpse(cfg, dataset):
     gpse_model, _recover_orig_cfgs = load_pretrained_gpse(cfg)
 
     # Temporarily remove transformation from dataset to avoid baking it in
+    orig_dataset_transform = dataset.transform
     dataset.transform = None
     vn_transform = VirtualNodePatchSingleton() if cfg.posenc_GPSE.virtual_node else None
 
