@@ -9,7 +9,6 @@ from torch_geometric.graphgym.register import register_head
 
 
 @register_head('san_graph')
-@register_head('graph')
 class SANGraphHead(nn.Module):
     """
     SAN prediction head for graph prediction tasks.
