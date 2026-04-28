@@ -77,7 +77,7 @@ posenc_GPSE:
   layers: 2
   loader:
     batch_size: 1
-    type: neighbor
+    type: full
   model: mlp
   model_dir: /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt
   rand_type: NormalSE
