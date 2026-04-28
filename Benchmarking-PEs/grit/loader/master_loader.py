@@ -815,7 +815,11 @@ def precompute_gpse(cfg, dataset):
 
         for start, end in zip(batch_ptr[:-1], batch_ptr[1:]):
             # Get fresh data object from storage (WITHOUT any transforms applied)
-            data = dataset.get(curr_idx).clone()
+            # Use the underlying data list directly if available to bypass indices mismatch in subsets
+            if hasattr(dataset, '_data_list') and dataset._data_list is not None:
+                data = dataset._data_list[curr_idx].clone()
+            else:
+                data = dataset.get(curr_idx).clone()
             
             # NUCLEAR FIX: Ensure x and pestat_GPSE have the same number of nodes
             if cfg.posenc_GPSE.virtual_node:
