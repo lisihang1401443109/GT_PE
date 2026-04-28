@@ -155,8 +155,16 @@ class GNNNodeEncoder(nn.Module):
 
         # Expand node features if needed
         h = self.linear_x(batch.x) if self.expand_x else batch.x
-
-        # Concatenate final PEs to input embedding
+        if h.shape[0] != pos_enc.shape[0]:
+            print(f"DEBUG Mismatch detected!")
+            print(f"DEBUG h.shape={h.shape}, pos_enc.shape={pos_enc.shape}")
+            print(f"DEBUG batch.num_graphs={batch.num_graphs}")
+            if hasattr(batch, 'ptr') and batch.ptr is not None:
+                diffs = batch.ptr[1:] - batch.ptr[:-1]
+                print(f"DEBUG Batch node counts (first 10): {diffs[:10].tolist()}")
+                print(f"DEBUG Expected total from ptr: {diffs.sum().item()}")
+            print(f"DEBUG Batch keys: {batch.keys}")
+            
         batch.x = torch.cat((h, pos_enc), 1)
 
         return batch
