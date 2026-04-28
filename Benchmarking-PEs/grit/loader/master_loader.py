@@ -673,6 +673,13 @@ def load_dataset_master(format, name, dataset_dir):
 
     if cfg.posenc_GPSE.enable:
         precompute_gpse(cfg, dataset)
+        
+    print(f"  [DEBUG] Final dataset state in load_dataset_master:", flush=True)
+    print(f"  [DEBUG]   dataset.data.x.shape: {dataset.data.x.shape}", flush=True)
+    if hasattr(dataset.data, 'pestat_GPSE'):
+        print(f"  [DEBUG]   dataset.data.pestat_GPSE.shape: {dataset.data.pestat_GPSE.shape}", flush=True)
+    print(f"  [DEBUG]   dataset.transform: {dataset.transform}", flush=True)
+
     return dataset
 
 
