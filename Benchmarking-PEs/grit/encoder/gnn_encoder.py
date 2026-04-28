@@ -163,7 +163,14 @@ class GNNNodeEncoder(nn.Module):
             sys.stderr.flush()
             # If h is larger (virtual nodes leaked), clip it
             if h.shape[0] > pos_enc.shape[0]:
-                h = h[:pos_enc.shape[0]]
+                num_nodes = pos_enc.shape[0]
+                h = h[:num_nodes]
+                # Also fix edge_index and edge_attr
+                if hasattr(batch, 'edge_index'):
+                    mask = (batch.edge_index[0] < num_nodes) & (batch.edge_index[1] < num_nodes)
+                    batch.edge_index = batch.edge_index[:, mask]
+                    if hasattr(batch, 'edge_attr') and batch.edge_attr is not None:
+                        batch.edge_attr = batch.edge_attr[mask]
             # If pos_enc is larger (unlikely), clip it
             elif pos_enc.shape[0] > h.shape[0]:
                 pos_enc = pos_enc[:h.shape[0]]
