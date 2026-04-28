@@ -27,7 +27,7 @@ pip install --no-cache-dir pyg_lib torch-scatter torch-sparse torch-cluster torc
 pip install --no-cache-dir torch-geometric
 
 echo "Installing additional dependencies..."
-conda install openbabel fsspec rdkit -c conda-forge -y
+# Note: rdkit/openbabel only needed for molecular datasets (PCQM4Mv2, Peptides), not IMDB
 # Pin torch==2.3.0 again here to prevent accidental upgrade by other packages
 pip install --no-cache-dir yacs torchmetrics performer-pytorch ogb tensorboardX wandb torch_ppr attrdict opt_einsum graphgym loguru pytorch_lightning==2.2.0 torch==2.3.0
 pip install setuptools==59.5.0
