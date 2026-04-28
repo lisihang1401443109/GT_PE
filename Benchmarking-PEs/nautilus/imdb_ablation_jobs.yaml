@@ -1,0 +1,551 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-sparse-gpse
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Sparse-GPSE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-sparse-lappe
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Sparse-LapPE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-sparse-rwse
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Sparse-RWSE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-sparse-nope
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Sparse-noPE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-dense-gpse
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Dense-GPSE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-dense-lappe
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Dense-LapPE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-dense-rwse
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Dense-RWSE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-dense-nope
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-Dense-noPE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-gat-gpse
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-GAT-GPSE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-gat-lappe
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-GAT-LapPE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-gat-rwse
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-GAT-RWSE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-ablation-gat-nope
+  namespace: gp-engine-malof
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - args:
+        - apt-get update && apt-get install -y git wget bzip2 ca-certificates libglib2.0-0
+          libxext6 libsm6 libxrender1 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+          -O miniconda.sh && bash miniconda.sh -b -p /opt/conda && export PATH="/opt/conda/bin:$PATH"
+          && conda create -n GTPE python=3.9 -y && source /opt/conda/etc/profile.d/conda.sh
+          && conda activate GTPE && pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+          --index-url https://download.pytorch.org/whl/cu121 && pip install torch_geometric
+          && pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv
+          -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && pip install yacs wandb
+          numpy pandas scikit-learn ogb performer-pytorch && cd /root && git clone
+          https://github.com/lisihang1401443109/GT_PE.git && cd GT_PE/Benchmarking-PEs
+          && git checkout fix/imdb-eval-mask && python main.py --cfg configs/GT/0_bench/GRIT/imdb_ablation/imdb-GAT-noPE.yaml
+          --repeat 1
+        command:
+        - /bin/bash
+        - -c
+        image: nvidia/cuda:12.1.0-base-ubuntu22.04
+        name: gpu-container
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+            nvidia.com/gpu: '1'
+          requests:
+            cpu: '2'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        volumeMounts:
+        - mountPath: /mnt/pvc
+          name: gt-pe-volume
+      restartPolicy: Never
+      volumes:
+      - name: gt-pe-volume
+        persistentVolumeClaim:
+          claimName: gt-pe-volume

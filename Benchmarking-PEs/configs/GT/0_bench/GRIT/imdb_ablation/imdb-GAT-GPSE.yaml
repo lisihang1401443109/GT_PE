@@ -1,0 +1,97 @@
+accelerator: cuda:0
+dataset:
+  edge_encoder: true
+  edge_encoder_bn: false
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 4
+  format: PyG-IMDB
+  name: MULTI
+  node_encoder: true
+  node_encoder_bn: false
+  node_encoder_name: LinearNode+GPSE
+  node_encoder_num_types: 1
+  task: node
+  task_type: classification
+  transductive: false
+gnn:
+  act: relu
+  agg: mean
+  batchnorm: true
+  dim_inner: 64
+  dropout: 0.0
+  head: inductive_node
+  layer_type: generalconv
+  layers_post_mp: 3
+  layers_pre_mp: 1
+  normalize_adj: false
+  stage_type: stack
+graph_gym:
+  max_epoch: 400
+gt:
+  attn:
+    O_e: true
+    act: relu
+    clamp: 5.0
+    edge_enhance: true
+    full_attn: true
+    fwl: false
+    norm_e: true
+  attn_dropout: 0.2
+  batch_norm: true
+  dim_hidden: 64
+  dropout: 0.0
+  layer_norm: false
+  layer_type: GAT+None
+  layers: 3
+  n_heads: 8
+  sparse: true
+  update_e: true
+metric_agg: argmax
+metric_best: f1
+model:
+  edge_decoding: dot
+  graph_pooling: none
+  loss_fun: cross_entropy
+  type: GPSModel
+num_workers: 4
+out_dir: results
+posenc_GPSE:
+  dim_pe: 32
+  enable: true
+  gnn_cfg:
+    act: relu
+    agg: mean
+    batchnorm: true
+    dim_inner: 512
+    dropout: 0.2
+    head: inductive_hybrid_multi
+    layer_type: resgatedgcnconv
+    layers_mp: 20
+    layers_post_mp: 2
+    layers_pre_mp: 1
+    multi_head_dim_inner: 32
+    normalize_adj: false
+    stage_type: skipsum
+  input_dropout_ae: 0.0
+  input_dropout_be: 0.5
+  layers: 2
+  loader:
+    batch_size: 128
+    type: full
+  model: mlp
+  model_dir: /root/GT_PE/Benchmarking-PEs/pretrained/gpse_model_molpcba_1.0.pt
+  rand_type: NormalSE
+  raw_norm_type: BatchNorm
+  repr_type: no_post_mp
+  use_repr: true
+  virtual_node: true
+train:
+  batch_size: 32
+  ckpt_period: 100
+  eval_period: 1
+  mode: custom
+wandb:
+  entity: sihang-personal
+  name: IMDB-Ablation-GAT-GPSE
+  project: PEGT-Ablation
+  use: true
