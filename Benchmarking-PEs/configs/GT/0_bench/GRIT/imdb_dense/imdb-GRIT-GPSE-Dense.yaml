@@ -84,6 +84,8 @@ posenc_GPSE:
   raw_norm_type: BatchNorm
   repr_type: no_post_mp
   use_repr: true
+  save: true
+  from_saved: true
   virtual_node: true
 train:
   batch_size: 32
