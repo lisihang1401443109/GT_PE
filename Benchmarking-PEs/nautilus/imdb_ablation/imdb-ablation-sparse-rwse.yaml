@@ -22,15 +22,15 @@ spec:
 
           apt-get update && apt-get install -y git
 
-          mkdir -p /root/GT_PE
+          cd /root
 
-          cd /root/GT_PE
+          if [ ! -d "GT_PE" ]; then
 
-          if [ ! -d "Benchmarking-PEs" ]; then
-
-          git clone https://github.com/lisihang1401443109/GT_PE.git Benchmarking-PEs
+          git clone https://github.com/lisihang1401443109/GT_PE.git
 
           fi
+
+          cd GT_PE/Benchmarking-PEs
 
           # 2. git sync
 

@@ -29,11 +29,11 @@ def generate_nautilus_jobs():
             args = f"""
             # 1. git setup
             apt-get update && apt-get install -y git
-            mkdir -p /root/GT_PE
-            cd /root/GT_PE
-            if [ ! -d "Benchmarking-PEs" ]; then
-                git clone https://github.com/lisihang1401443109/GT_PE.git Benchmarking-PEs
+            cd /root
+            if [ ! -d "GT_PE" ]; then
+                git clone https://github.com/lisihang1401443109/GT_PE.git
             fi
+            cd GT_PE/Benchmarking-PEs
             
             # 2. git sync
             cd /root/GT_PE/Benchmarking-PEs
