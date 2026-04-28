@@ -32,16 +32,16 @@ def gpse_process_batch(model, batch) -> Tuple[torch.Tensor, torch.Tensor]:
                              "is specified correctly)")
 
     # Prepare input distributions for GPSE
+    device = get_device(cfg.posenc_GPSE.accelerator, cfg.accelerator)
     if rand_type == "NormalSE":
-        rand = np.random.normal(loc=0, scale=1.0, size=(n, dim_in))
+        batch.x = torch.randn((n, dim_in), device=device, dtype=torch.float32)
     elif rand_type == "UniformSE":
-        rand = np.random.uniform(low=0.0, high=1.0, size=(n, dim_in))
+        batch.x = torch.rand((n, dim_in), device=device, dtype=torch.float32)
     elif rand_type == "BernoulliSE":
-        rand = np.random.uniform(low=0.0, high=1.0, size=(n, dim_in))
-        rand = (rand < cfg.randenc_BernoulliSE.threshold)
+        batch.x = torch.rand((n, dim_in), device=device, dtype=torch.float32)
+        batch.x = (batch.x < cfg.randenc_BernoulliSE.threshold).to(torch.float32)
     else:
         raise ValueError(f"Unknown {rand_type=!r}")
-    batch.x = torch.from_numpy(rand.astype("float32"))
 
     if cfg.posenc_GPSE.virtual_node:
         # HACK: We need to reset virtual node features to zeros to match the
@@ -50,8 +50,7 @@ def gpse_process_batch(model, batch) -> Tuple[torch.Tensor, torch.Tensor]:
         # zeros). Can potentially test if initializing virtual node features to
         # random features is better than setting them to zeros.
         ptr = batch.ptr if hasattr(batch, 'ptr') and batch.ptr is not None else torch.tensor([0, n], device=batch.x.device)
-        for i in ptr[1:]:
-            batch.x[i - 1] = 0
+        batch.x[ptr[1:] - 1] = 0
 
     # Generate encodings using the pretrained encoder
     device = get_device(cfg.posenc_GPSE.accelerator, cfg.accelerator)
