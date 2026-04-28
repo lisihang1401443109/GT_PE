@@ -28,7 +28,7 @@ spec:
 
           if [ ! -d "Benchmarking-PEs" ]; then
 
-          git clone https://github.com/lisihang1401443109/GT_PE.git
+          git clone https://github.com/lisihang1401443109/GT_PE.git Benchmarking-PEs
 
           fi
 

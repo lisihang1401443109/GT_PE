@@ -32,7 +32,7 @@ def generate_nautilus_jobs():
             mkdir -p /root/GT_PE
             cd /root/GT_PE
             if [ ! -d "Benchmarking-PEs" ]; then
-                git clone https://github.com/lisihang1401443109/GT_PE.git
+                git clone https://github.com/lisihang1401443109/GT_PE.git Benchmarking-PEs
             fi
             
             # 2. git sync
