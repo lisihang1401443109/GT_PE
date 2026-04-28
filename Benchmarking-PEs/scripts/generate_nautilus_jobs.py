@@ -14,6 +14,7 @@ def generate_nautilus_jobs():
             config_path = f"configs/GT/0_bench/GRIT/imdb_ablation/imdb-{variant}-{pe}.yaml"
             
             # Simplified 4-step args + symlinks/cache
+            # Replicating the EXACT env setup of the test pod
             args = f"""
             # 1. git setup
             mkdir -p /root/GT_PE
@@ -22,9 +23,9 @@ def generate_nautilus_jobs():
                 git clone https://github.com/lisihang1401443109/GT_PE.git
             fi
             
-            # 2. env setup
-            source /opt/conda/etc/profile.d/conda.sh || true
-            conda activate GTPE || true
+            # 2. env setup (minimal install to match test pod)
+            pip install torch-geometric==2.6.1 yacs==0.1.8 wandb==0.26.1 ogb==1.3.6 performer-pytorch==1.1.4 opt_einsum==3.4.0
+            pip install pyg_lib==0.4.0+pt23cu121 torch_scatter==2.1.2+pt23cu121 torch_sparse==0.6.18+pt23cu121 torch_cluster==1.6.3+pt23cu121 torch_spline_conv==1.2.2+pt23cu121 -f https://data.pyg.org/whl/torch-2.3.0+cu121.html
             
             # 3. git sync
             cd /root/GT_PE/Benchmarking-PEs
@@ -54,23 +55,18 @@ def generate_nautilus_jobs():
                 },
                 "spec": {
                     "template": {
+                        "metadata": {
+                            "labels": {
+                                "app": "imdb-ablation"
+                            }
+                        },
                         "spec": {
                             "containers": [{
                                 "name": "gpu-container",
-                                "image": "nvidia/cuda:12.1.0-base-ubuntu22.04",
+                                "image": "pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime",
                                 "command": ["/bin/bash", "-c"],
                                 "args": [
-                                    "apt-get update && apt-get install -y git wget bzip2 ca-certificates && "
-                                    "wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && "
-                                    "bash miniconda.sh -b -p /opt/conda && "
-                                    "export PATH=\"/opt/conda/bin:$PATH\" && "
-                                    "conda create -n GTPE python=3.9 -y && "
-                                    "source /opt/conda/etc/profile.d/conda.sh && "
-                                    "conda activate GTPE && "
-                                    "pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121 && "
-                                    "pip install torch_geometric && "
-                                    "pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.1.0+cu121.html && "
-                                    "pip install yacs wandb numpy pandas scikit-learn ogb performer-pytorch && "
+                                    "apt-get update && apt-get install -y git && "
                                     f"{args}"
                                 ],
                                 "resources": {
