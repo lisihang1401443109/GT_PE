@@ -35,7 +35,7 @@ def preformat_IMDB(dataset_dir, name):
     new_train_mask = torch.zeros(num_nodes, dtype=torch.bool)
     new_val_mask = torch.zeros(num_nodes, dtype=torch.bool)
     new_test_mask = torch.zeros(num_nodes, dtype=torch.bool)
-    new_y = torch.zeros(num_nodes, dtype=torch.long) # Use 0 as safe placeholder; will be masked out
+    new_y = torch.full((num_nodes,), -1, dtype=torch.long)  # -1 marks non-movie nodes as unlabeled
     
     # movie nodes are the first type in IMDB, so they come first in to_homogeneous
     new_train_mask[:num_movies] = train_mask

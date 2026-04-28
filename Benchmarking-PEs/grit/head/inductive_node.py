@@ -21,7 +21,8 @@ class GNNInductiveNodeHead(nn.Module):
                              has_act=False, has_bias=True, cfg=cfg))
 
     def _apply_index(self, batch):
-        return batch.x, batch.y
+        mask = getattr(batch, f'{batch.split}_mask')
+        return batch.x[mask], batch.y[mask]
 
     def forward(self, batch):
         batch = self.layer_post_mp(batch)
